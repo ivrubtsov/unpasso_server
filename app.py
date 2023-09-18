@@ -38,6 +38,11 @@ def hello():
 #  static String deleteUser(int id) =>
 #      '$_baseUrl/users/$id?force=True&reassign=111';
 #
+#  static String getAchievements(int id) => '$_baseUrl/users/$id';
+#
+#  static String setAchievements(String description, int id) =>
+#      '$_baseUrl/users/$id?description=$description';
+#
 #  static String getUser(int id) => '$_baseUrl/users/$id';
 #
 #  static String createGoal(String title, int authorId, String date) =>
@@ -165,8 +170,8 @@ def registerUser():
 
 
 # Delete a user
-@app.route(BASE_URL+'/users/$id', methods=['DELETE'])
-def deleteUser():
+@app.route(BASE_URL+'/users/<int:id>', methods=['DELETE'])
+def deleteUser(id):
     try:
         conn = psycopg2.connect(database=DB_DATABASE,
                                 host=DB_SERVER,
@@ -199,8 +204,8 @@ def deleteUser():
     return {'id_product':id_product, 'operation':'delete'}
 
 # Get a user data
-@app.route(BASE_URL+'/users/$id', methods=['GET'])
-def getUser():
+@app.route(BASE_URL+'/users/<int:id>', methods=['GET'])
+def getUser(id):
     # здесь мы обращаемся к базе данных и показываем список продуктов
     try:
         conn = psycopg2.connect(database=DB_DATABASE,
@@ -222,6 +227,43 @@ def getUser():
         products.append({'id_product':productID, 'name':productName})
     conn.close()
     return jsonify(products)
+
+
+# Update user's data
+# Don't forget about achievements in the description fiels
+@app.route(BASE_URL+'/users/<int:id>', methods=['POST'])
+def updateUser(id):
+    try:
+        conn = psycopg2.connect(database=DB_DATABASE,
+                                host=DB_SERVER,
+                                user=DB_USER,
+                                password=DB_PASSWORD,
+                                port=DB_PORT)
+    except:
+        print("Не могу установить соединение с базой данных")
+        return 500
+    if request.method == 'POST':
+        request_data = request.get_json()
+        id_user = request.args.get('id_user')
+
+    elif request.method == 'GET':
+        id_user = request.ards.get('id_user')
+
+    # получение последнего номера чек-листа пользователя чтобы увеличить его на 1
+    cursor = conn.cursor()
+    query = "SELECT number FROM lists WHERE id_user="+str(id_user)+" ORDER BY number DESC LIMIT 1"
+    cursor.execute(query)
+    if cursor.rowcount>0:
+        number = cursor.fetchone()[0]+1
+    else:
+        number = 1
+    query = "INSERT INTO lists (id_user, number) VALUES ("+str(id_user)+", "+str(number)+") RETURNING id_list;"
+    cursor.execute(query)
+    id_list = cursor.fetchone()[0]
+    conn.commit()
+    conn.close()
+    print('Добавлен чек-лист, его ид: ',id_list, ', номер чек-листа пользователя: ', number)
+    return {'id_list':id_list, 'number':number}
 
 
 # Create a goal
@@ -316,8 +358,8 @@ def getUserGoals():
 
 
 # Complete the goal
-@app.route(BASE_URL+'/posts/$postId', methods=['POST'])
-def completeGoal():
+@app.route(BASE_URL+'/posts/<int:id>', methods=['POST'])
+def completeGoal(id):
     try:
         conn = psycopg2.connect(database=DB_DATABASE,
                                 host=DB_SERVER,
@@ -356,41 +398,6 @@ def completeGoal():
     return {'id_user':id_user, 'operation':'update'}
 
 
-# Update user's data
-@app.route(BASE_URL+'/users/$id', methods=['POST'])
-def updateUser():
-    try:
-        conn = psycopg2.connect(database=DB_DATABASE,
-                                host=DB_SERVER,
-                                user=DB_USER,
-                                password=DB_PASSWORD,
-                                port=DB_PORT)
-    except:
-        print("Не могу установить соединение с базой данных")
-        return 500
-    if request.method == 'POST':
-        request_data = request.get_json()
-        id_user = request.args.get('id_user')
-
-    elif request.method == 'GET':
-        id_user = request.ards.get('id_user')
-
-    # получение последнего номера чек-листа пользователя чтобы увеличить его на 1
-    cursor = conn.cursor()
-    query = "SELECT number FROM lists WHERE id_user="+str(id_user)+" ORDER BY number DESC LIMIT 1"
-    cursor.execute(query)
-    if cursor.rowcount>0:
-        number = cursor.fetchone()[0]+1
-    else:
-        number = 1
-    query = "INSERT INTO lists (id_user, number) VALUES ("+str(id_user)+", "+str(number)+") RETURNING id_list;"
-    cursor.execute(query)
-    id_list = cursor.fetchone()[0]
-    conn.commit()
-    conn.close()
-    print('Добавлен чек-лист, его ид: ',id_list, ', номер чек-листа пользователя: ', number)
-    return {'id_list':id_list, 'number':number}
-
 #  static String getFriends(int id) => '$_baseUrl/users/$id';
 #
 #  static String setFriends(int id, String description) =>
@@ -411,8 +418,8 @@ def updateUser():
 #
 #  static String updateGoal(int id) => '$_baseUrl/posts/$id';
 #
-@app.route(BASE_URL+'/users/listall', methods=['GET', 'POST'])
-def usersList():
+@app.route(BASE_URL+'/friends/<int:id>', methods=['GET', 'POST'])
+def friendsList(id):
     # здесь мы обращаемся к базе данных и показываем список пользователей
     try:
         conn = psycopg2.connect(database=DB_DATABASE,
