@@ -408,11 +408,8 @@ def completeGoal(id):
 #
 #  static String createGoal() => '$_baseUrl/posts';
 #
-#  static String getPublicGoals() =>
-#      '$_baseUrl/posts?per_page=100&status=publish,future&tags=26&categories=6';
-#
-#  static String getFriendsGoals() =>
-#      '$_baseUrl/posts?per_page=100&status=publish,future&tags=27&categories=6';
+#  static String getFriendsGoals(int userId) =>
+#      '$_baseUrl/posts?per_page=100&status=publish,future&tags=27&categories=6&user=$userId';
 #
 #  static String getGoalById(int id) => '$_baseUrl/posts/$id';
 #
