@@ -1,7 +1,11 @@
 from flask import Flask, request
+from functools import wraps
 from flask import jsonify
+#from flask_sqlalchemy import SQLAlchemy
+#from sqlalchemy.sql import func
 import psycopg2
 import os
+from datetime import datetime
 from dotenv import load_dotenv
 load_dotenv(".env")
 DB_SERVER = os.getenv('DB_SERVER')
@@ -12,16 +16,322 @@ DB_PORT = os.getenv('DB_PORT')
 TMP_DIR = os.getenv('TMP_DIR')
 if not TMP_DIR:
     TMP_DIR = 'tmp'
+SITE_URL = os.getenv('SITE_URL')
 BASE_URL = os.getenv('BASE_URL')
 if not BASE_URL:
     BASE_URL = '/wp-json/wp/v2'
+SERVICE_USERNAME = os.getenv('SERVICE_USERNAME')
+SERVICE_PASSWORD = os.getenv('SERVICE_PASSWORD')
+
+try:
+    db = psycopg2.connect(database=DB_DATABASE,
+                            host=DB_SERVER,
+                            user=DB_USER,
+                            password=DB_PASSWORD,
+                            port=DB_PORT)
+    print('Database connection established')
+
+except:
+    print("Database connection error")
+    quit()
+
+import atexit
+#defining function to run on shutdown
+def close_database_connection():
+    db.close()
+    print("Database connection closed")
+#Register the function to be called on exit
+atexit.register(close_database_connection)
+
+import wp_crypt
+
+class User:
+    def __init__(
+            this,
+            id = 0,
+            name = '',
+            date = datetime.now(),
+            username = '',
+            password = '',
+            avatar = 0,
+            achievements = [],
+            friends = [],
+            friendsRequestsReceived = [],
+            friendsRequestsSent = [],
+            email = '',
+            url = '',
+            description = {},
+            locale = '',
+            rating = 0,
+        ):
+        this.id = id
+        this.name = name
+        this.date = date
+        this.username = username
+        this.password = password
+        this.avatar = avatar
+        this.email = email
+        this.url = url
+        this.locale = locale
+        this.rating = rating
+        this.description = description
+        this.achievements = achievements
+        this.friends = friends
+        this.friendsRequestsReceived = friendsRequestsReceived
+        this.friendsRequestsSent = friendsRequestsSent
+    def fromJSON(this, json):
+        if not json:
+            return
+        if json['id']:
+            this.id = json['id']
+        if json['name']:
+            this.name = json['name']
+        if json['date']:
+            this.date = datetime.fromisoformat(json['date'])
+        if json['username']:
+            this.username = json['username']
+        if json['password']:
+            this.password = wp_crypt.crypt_private(json['password'])
+        if json['avatar']:
+            this.avatar = json['avatar']
+        elif json['description'] and json['description']['avatar']:
+            this.avatar = json['description']['avatar']
+        if json['email']:
+            this.email = json['email']
+        if json['url']:
+            this.url = json['url']
+        if json['locale']:
+            this.locale = json['locale']
+        if json['rating']:
+            this.rating = json['rating']
+        if json['description']:
+            this.description = json['description']
+        if json['achievements']:
+            this.achievements = json['achievements']
+        elif json['description'] and json['description']['achievements']:
+            this.achievements = json['description']['achievements']
+        this.setAchievements()
+#        if json['friends']:
+#            this.friends = json['friends']
+#        elif json['description'] and json['description']['friends']:
+#            this.friends = json['description']['friends']
+#        if json['friendsRequests']:
+#            this.friendsRequests = json['friendsRequests']
+#        elif json['description'] and json['description']['friendsRequests']:
+#            this.friendsRequests = json['description']['friendsRequests']
+
+    def toJSON(this):
+        return {
+                'id': this.id,
+                'name': this.name,
+                'username': this.username,
+                'date': this.date.isoformat(),
+                'url': this.url,
+                'email': this.email,
+                'description': {
+                    'achievements': this.achievements,
+                    'avatar': this.avatar,
+                    'friends': this.friends,
+                    'friendsRequestsReceived': this.friendsRequestsReceived,
+                    'friendsRequestsSent': this.friendsRequestsSent,
+                    },
+                'link': SITE_URL+'/author/'+this.username,
+        }
+
+    def toSQL(this):
+        return ''
+
+    def getAchievements(this):
+        try:
+            cursor = db.cursor()
+            query = "SELECT id_achievement FROM achievements WHERE id_user="+this.id+";"
+            cursor.execute(query)
+            res = cursor.fetchall()
+            achs = []
+            for (id_achievement) in res:
+                achs.append(id_achievement)
+            return achs
+        except:
+            print("Database get achievements request error")
+            return []
+
+    def setAchievements(this):
+        try:
+            cursor = db.cursor()
+            query = "DELETE FROM achievements WHERE id_user="+this.id+"';"
+            cursor.execute(query)
+            if not this.achievements == []:
+                first = True
+                query = "INSERT INTO achievements (id_user, id_achievement) VALUES "
+                for id_achievement in this.achievements:
+                    if not first:
+                        query = query + ', '
+                    query = query + '('+str(this.id)+', '+str(id_achievement)+')'
+                    first = False
+                query = query + ';'
+                cursor.execute(query)
+            db.commit()
+            return
+        except:
+            print("Database set achievements request error")
+            return
+
+    def getFriends(this):
+        try:
+            cursor = db.cursor()
+            query = "SELECT friends.id_friend, users.username, users.name, users.avatar, users.rating FROM friends, users WHERE friends.id_user="+this.id+" AND friends.id_friend=users.id;"
+            cursor.execute(query)
+            res = cursor.fetchall()
+            friends = []
+            for (id, username, name, avatar, rating) in res:
+                friends.append({
+                    'id': id,
+                    'username': username,
+                    'name': name,
+                    'avatar': avatar,
+                    'rating': rating,
+                })
+            return friends
+        except:
+            print("Database get friends request error")
+            return []
+
+    def getFriendsRequestsSent(this):
+        try:
+            cursor = db.cursor()
+            query = "SELECT friends_requests.id, friends_requests.id_status, users.id, users.username, users.name, users.avatar, users.rating FROM friends_requests, users WHERE friends_requests.id_source="+this.id+" AND friends_requests.id_target=users.id;"
+            cursor.execute(query)
+            res = cursor.fetchall()
+            friendsRequestsSent = []
+            for (requestid, status, userid, username, name, avatar, rating) in res:
+                friendsRequestsSent.append({
+                    'requestId': requestid,
+                    'status': status,
+                    'userId': userid,
+                    'username': username,
+                    'name': name,
+                    'avatar': avatar,
+                    'rating': rating,
+                })
+            return friendsRequestsSent
+        except:
+            print("Database get friends request error")
+            return []
+
+    def getFriendsRequestsReceived(this):
+        try:
+            cursor = db.cursor()
+            query = "SELECT friends_requests.id, friends_requests.id_status, users.id, users.username, users.name, users.avatar, users.rating FROM friends_requests, users WHERE friends_requests.id_target="+this.id+" AND friends_requests.id_source=users.id;"
+            cursor.execute(query)
+            res = cursor.fetchall()
+            friendsRequestsReceived = []
+            for (requestid, status, userid, username, name, avatar, rating) in res:
+                friendsRequestsReceived.append({
+                    'requestId': requestid,
+                    'status': status,
+                    'userId': userid,
+                    'username': username,
+                    'name': name,
+                    'avatar': avatar,
+                    'rating': rating,
+                })
+            return friendsRequestsReceived
+        except:
+            print("Database get friends request error")
+            return []
+
+    def getUserDataByUsername(this, username):
+        cursor = db.cursor()
+        query = "SELECT users.id, users.username, users.name, users.email, users.url, users.description, users.locale, users.date, users.avatar, users.rating FROM users WHERE users.username='"+username+"' ORDER BY users.date DESC LIMIT 1;"
+        cursor.execute(query)
+        res = cursor.fetchone()
+        for (id, username, name, email, url, description, locale, date, avatar, rating) in res:
+            this.id = id
+            this.name = name
+            this.date = date
+            this.username = username
+            this.avatar = avatar
+            this.email = email
+            this.url = url
+            this.locale = locale
+            this.rating = rating
+            this.description = description
+            this.achievements = this.getAchievements()
+            this.friends = this.getFriends()
+            this.friendsRequestsSent = this.getFriendsRequestsSent()
+            this.friendsRequestsReceived = this.getFriendsRequestsReceived()
+        return
 
 app = Flask(__name__)
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://username:password@host:port/database_name'
+#app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+#db = SQLAlchemy(app)
+#
+#class User(db.Model):
+#    id = db.Column(db.Integer, primary_key=True)
+#    firstname = db.Column(db.String(100), nullable=False)
+#    lastname = db.Column(db.String(100), nullable=False)
+#    email = db.Column(db.String(80), unique=True, nullable=False)
+#    age = db.Column(db.Integer)
+#    created_at = db.Column(db.DateTime(timezone=True),
+#                           server_default=func.now())
+#    bio = db.Column(db.Text)
+#
+#    def __repr__(self):
+#        return f'<User {self.id}>'
+
+# Check WP passwords:
+# from passlib.hash import phpass
+# phpass.verify("password", "wordpress hash")
+
+def check_auth(username, password):
+    cursor = db.cursor()
+    query = "SELECT users.id, users.username, users.password FROM users WHERE users.username='"+username+"' OR users.email='"+username+"';"
+    cursor.execute(query)
+    auth = False
+    if cursor.rowcount>0:
+        res = cursor.fetchall()
+        for (db_id, db_username, db_password) in res:
+            if db_id and db_username and db_password == wp_crypt.crypt_private(password):
+                auth = True
+    return auth
+
+def check_auth_service(username, password):
+    return username == SERVICE_USERNAME and password == SERVICE_PASSWORD
+
+def login(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        auth = request.authorization
+        if not auth:
+            return jsonify({'message': 'Authentication required'}), 401
+        if not check_auth(auth.username, auth.password):
+            return jsonify({'message': 'User not found'}), 403
+        return f(*args, **kwargs)
+    return decorated_function
+
+def login_service(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        auth = request.authorization
+        if not auth:
+            return jsonify({'message': 'Authentication required'}), 401
+        if not check_auth(auth.username, auth.password):
+            return jsonify({'message': 'User not found'}), 403
+        return f(*args, **kwargs)
+    return decorated_function
 
 # Server responce if a user didn't request anything
 @app.route("/", methods=["GET"])
+@login_service
 def hello():
     return "Hello World!"
+
+# Server responce if a user didn't request anything
+@app.route("/auth", methods=["GET"])
+@login
+def hello():
+    return "User is authorized!"
 
 # Compatibility with the Wordpress site:
 #
@@ -82,50 +392,28 @@ def hello():
 
 # Authenticate user
 @app.route(BASE_URL+'/users/me', methods=['GET'])
+@login
 def authUser():
-    try:
-        conn = psycopg2.connect(database=DB_DATABASE,
-                                host=DB_SERVER,
-                                user=DB_USER,
-                                password=DB_PASSWORD,
-                                port=DB_PORT)
-
-    except:
-        print("Не могу установить соединение с базой данных")
-        return 500
-    if request.method == 'POST':
-        request_data = request.get_json()
-        id_productname = request_data['id_productname']
-        quantity = request_data['quantity']
-        id_list = request_data['id_list']
-
-    elif request.method == 'GET':
-        id_productname = request.args.get('id_productname')
-        quantity = request.args.get('quantity')
-        id_list = request.args.get('id_list')
+    if request.method == 'GET':
+        username = request.authorization.username
     else:
-        print("Некорректный запрос")
-        return 500
-    if (not id_productname):
-        print("Не указано название продукта")
-        return 500
-    if not quantity:
-        quantity = 1
-    if not id_list:
-        id_list = 1
-
-    cursor = conn.cursor()
-    query = "INSERT INTO products (id_list, id_status, id_productname, quantity) VALUES ("+str(id_list)+", 1, "+str(id_productname)+", "+str(quantity)+") RETURNING id_product;"
-    cursor.execute(query)
-    id_product = cursor.fetchone()[0]
-    conn.commit()
-    conn.close()
-    print('Добавлен продукт, его номер: ',id_product)
-    return {'id_product':id_product, 'operation':'add'}
-
+        print("Incorrect request")
+        return jsonify({'message': 'Incorrect request'}), 400
+    if (not username or username==''):
+        print("Username is null")
+        return jsonify({'message': 'Username is null'}), 400
+    try:
+        username = request.authorization.username
+        user = User()
+        user.getUserDataByUsername(username)
+        return jsonify(user.toJSON), 200
+    except:
+        print("User auth error")
+        return jsonify({'message': 'Server internal error'}), 500
 
 # Register a new user
 @app.route(BASE_URL+'/users', methods=['POST'])
+@login_service
 def registerUser():
     try:
         conn = psycopg2.connect(database=DB_DATABASE,
