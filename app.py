@@ -3,6 +3,8 @@ from functools import wraps
 import os
 from dotenv import load_dotenv
 from user import User, check_auth, check_auth_service
+from goal import Goal
+from goals import getUserGoals, getAvailableGoals
 
 load_dotenv(".env")
 DB_SERVER = os.getenv('DB_SERVER')
@@ -10,6 +12,9 @@ DB_USER = os.getenv('DB_USER')
 DB_PASSWORD = os.getenv('DB_PASSWORD')
 DB_DATABASE = os.getenv('DB_DATABASE')
 DB_PORT = os.getenv('DB_PORT')
+DB_STRING = os.getenv('DB_STRING')
+if not DB_STRING:
+    DB_STRING = '$$'
 TMP_DIR = os.getenv('TMP_DIR')
 if not TMP_DIR:
     TMP_DIR = 'tmp'
@@ -92,21 +97,20 @@ def hello():
 #          int id, String name, String userName, String description) =>
 #      '$_baseUrl/users/$id?name=$name&username=$userName&description=$description';
 #
-#  static String getFriends(int id) => '$_baseUrl/users/$id';
+#  static String getFriends() => '$_baseUrl/friends';
 #
-#  static String setFriends(int id, String description) =>
-#      '$_baseUrl/users/$id?description=$description';
+#  static String inviteFriend(int id) => '$_baseUrl/friends/$id?action=invite';
 #
-#  static String inviteFriends(int id, String description) =>
-#      '$_baseUrl/users/$id?description=$description';
+#  static String acceptFriend(int id) => '$_baseUrl/friends/$id?action=accept';
+#
+#  static String rejectFriend(int id) => '$_baseUrl/friends/$id?action=reject';
+#
+#  static String removeFriend(int id) => '$_baseUrl/friends/$id?action=remove';
 #
 #  static String createGoal() => '$_baseUrl/posts';
 #
-#  static String getPublicGoals() =>
-#      '$_baseUrl/posts?per_page=100&status=publish,future&tags=26&categories=6';
-#
-#  static String getFriendsGoals() =>
-#      '$_baseUrl/posts?per_page=100&status=publish,future&tags=27&categories=6';
+#  static String getAvailableGoals(int page) =>
+#      '$_baseUrl/posts?per_page=$fetchPageLimit&page=$page&status=publish,future&categories=6';
 #
 #  static String getGoalById(int id) => '$_baseUrl/posts/$id';
 #
@@ -126,9 +130,8 @@ def authUser():
         print("Username is null")
         return jsonify({'message': 'Username is null'}), 400
     try:
-        username = request.authorization.username
         user = User()
-        user.getUserDataByUsername(username)
+        user.getUserByUsername(username)
         if user.id == 0:
             return jsonify({'message': 'User is not found'}), 404
         else:
@@ -164,7 +167,7 @@ def deleteUser(id):
         return jsonify({'message': 'User ID is null'}), 400
     try:
         user = User()
-        user.getUserDataById(id)
+        user.getUserById(id)
         if user.id == 0:
             return jsonify({'message': 'User is not found'}), 404
 #        elif not user.username == request.authorization.username:
@@ -185,7 +188,7 @@ def getUser(id):
         return jsonify({'message': 'User ID is null'}), 400
     try:
         user = User()
-        user.getUserDataById(id)
+        user.getUserById(id)
         if user.id == 0:
             return jsonify({'message': 'User is not found'}), 404
 #        elif not user.username == request.authorization.username:
@@ -206,7 +209,7 @@ def updateUser(id):
         return jsonify({'message': 'User ID is null'}), 400
     try:
         user = User()
-        user.getUserDataById(id)
+        user.getUserById(id)
         if user.id == 0:
             return jsonify({'message': 'User is not found'}), 404
         elif not user.username == request.authorization.username:
@@ -228,156 +231,149 @@ def updateUser(id):
 @app.route(BASE_URL+'/posts', methods=['POST'])
 @login
 def createGoal():
-
-    
-    # здесь мы обращаемся к базе данных и показываем список продуктов
     try:
-        conn = psycopg2.connect(database=DB_DATABASE,
-                                host=DB_SERVER,
-                                user=DB_USER,
-                                password=DB_PASSWORD,
-                                port=DB_PORT)
-
+        if request.method == 'POST':
+            request_data = request.get_json()
+            goal = Goal()
+            goal.fromJSON(request_data)
+            res = goal.save()
+            return res
+        else:
+            print("Incorrect request")
+            return jsonify({'message': 'Incorrect request'}), 400
     except:
-        print("Не могу установить соединение с базой данных")
-        return 500
+        print("Goal save error")
+        return jsonify({'message': 'Server internal error'}), 500
 
-    if request.method == 'POST':
-        request_data = request.get_json()
-        id_user = request_data['id_user']
-
-    elif request.method == 'GET':
-        id_user = request.args.get('id_user')
-    else:
-        print("Некорректный запрос")
-        return 500
-    if not id_user:
-        print("Не указан пользователь")
-        return 500
-
-    cursor = conn.cursor()
-    query = ("SELECT users.id_user, users.name, users.nickname, lists.id_list, products.id_product, product_names.name, products.quantity FROM products, lists, users, product_names WHERE products.id_productname=product_names.id_productname AND products.id_status=1 AND products.id_list=lists.id_list AND lists.id_user=users.id_user AND users.id_user="+str(id_user))
-    cursor.execute(query)
-    res = cursor.fetchall()
-    products = []
-    for (userID, userName, userNickname, listID, productID, productName, productQuantity) in res:
-        print("Имя: "+userName+", ник: "+userNickname+", номер чек-листа: ", listID, ", номер продукта: ", productID, ", название: ", productName, ", количество: "+str(productQuantity))
-        products.append({'id_user':userID, 'userName':userName , 'userNickname:':userNickname, 'id_list':listID, 'id_product':productID, 'name':productName, 'quantity':productQuantity})
-    conn.close()
-    return jsonify(products)
-
-
-# Get user's goals
+# Get user's goals - personal and available
 @app.route(BASE_URL+'/posts', methods=['GET'])
 @login
 def getUserGoals():
-    try:
-        conn = psycopg2.connect(database=DB_DATABASE,
-                                host=DB_SERVER,
-                                user=DB_USER,
-                                password=DB_PASSWORD,
-                                port=DB_PORT)
-
-    except:
-        print("Не могу установить соединение с базой данных")
-        return 500
-    if request.method == 'POST':
-        request_data = request.get_json()
-        email = request_data('email')
-        name = request_data('name')
-        nickname = request_data('nickname')
-        password = request_data('password')
-
-    elif request.method == 'GET':
-        email = request.args.get('email')
-        name = request.args.get('name')
-        nickname = request.args.get('nickname')
-        password = request.args.get('password')
+    if request.method == 'GET':
+        username = request.authorization.username
     else:
-        print("Некорректный запрос")
-        return 500
-    if not email:
-        print("Не указан email")
-        return 500
-    if not name:
-        print("Не указано имя")
-        return 500
-    if not nickname:
-        print("Не указан ник")
-        return 500
-    if not password:
-        print("Не указан пароль")
-        return 500
+        print("Incorrect request")
+        return jsonify({'message': 'Incorrect request'}), 400
+    if (not username or username==''):
+        print("Username is null")
+        return jsonify({'message': 'Username is null'}), 400
+    try:
+        if 'page' in request.args:
+            page = request.args.get('page')
+        else:
+            page = 1
+        if 'per_page' in request.args:
+            per_page = request.args.get('per_page')
+        else:
+            per_page = 100
+        user = User()
+        if 'author' in request.args:
+            author = request.args.get('author')
+            user.getUserById(author)
+            if not user.username == username:
+                print("Wrong request to get other user's goals")
+                return jsonify({'message': 'Unable to update data of other users'}), 403
+            else:
+                return getUserGoals(author, page, per_page)
+        else:
+            user.getUserByUsername(username)
+            return getAvailableGoals(user.id, page, per_page)
+    except:
+        print("Get user's goals error")
+        return jsonify({'message': 'Server internal error'}), 500
 
-    cursor = conn.cursor()
-    query = "INSERT INTO users (email, name, nickname, password) VALUES ('"+email+"', '"+name+"' , '"+nickname+"', '"+password+"') RETURNING id_user;"
-    cursor.execute(query)
-    id_user = cursor.fetchone()[0]
-    conn.commit()
-    conn.close()
-    print('Добавлен пользователь, имя: ',name,', ник: ',nickname,', его номер: ',id_user)
-    return {'id_user':id_user, 'operation':'add'}
-
-
-# Complete the goal
+# Complete or update the goal
 @app.route(BASE_URL+'/posts/<int:id>', methods=['POST'])
 @login
-def completeGoal(id):
-    try:
-        conn = psycopg2.connect(database=DB_DATABASE,
-                                host=DB_SERVER,
-                                user=DB_USER,
-                                password=DB_PASSWORD,
-                                port=DB_PORT)
-    except:
-        print("Не могу установить соединение с базой данных")
-        return 500
+def updateGoal(id):
     if request.method == 'POST':
-        request_data = request.get_json()
-        id_user = request_data('id_user')
-        email = request_data('email')
-        name = request_data('name')
-        nickname = request_data('nickname')
-        password = request_data('password')
-
-    elif request.method == 'GET':
-        id_user = request.ards.get('id_user')
-        email = request.args.get('email')
-        name = request.args.get('name')
-        nickname = request.args.get('nickname')
-        password = request.args.get('password')
+        username = request.authorization.username
     else:
-        print("Некорректный запрос")
-        return 500
-    if not id_user:
-        print("Не указан идентификатор пользователя")
-        return 500
+        print("Incorrect request")
+        return jsonify({'message': 'Incorrect request'}), 400
+    if (not username or username==''):
+        print("Username is null")
+        return jsonify({'message': 'Username is null'}), 400
+    if (not id or id=='' or id==0):
+        print("Goal ID is null")
+        return jsonify({'message': 'Goal ID is null'}), 400
+    try:
+        goal = Goal()
+        goal.getGoalById(id)
+        user = User()
+        user.getUserByUsername(username)
+        if goal.id == 0:
+            return jsonify({'message': 'Goal is not found'}), 404
+        elif not user.id == goal.author:
+            return jsonify({'message': 'Unable to update data of other users'}), 403
+        else:
+            request_data = request.get_json()
+            goal.fromJSON(request_data)
+            return goal.save()
+    except:
+        print("Goal data error")
+        return jsonify({'message': 'Server internal error'}), 500
 
-    cursor = conn.cursor()
-    query = "UPDATE users SET email='"+email+"', name='"+name+"', nickname='"+nickname+"', password='"+password+"' WHERE id_user="+str(id_user)+""
-    cursor.execute(query)
-    conn.commit()
-    conn.close()
-    return {'id_user':id_user, 'operation':'update'}
+# Get the goal by ID
+@app.route(BASE_URL+'/posts/<int:id>', methods=['GET'])
+@login
+def getGoal(id):
+    if request.method == 'GET':
+        username = request.authorization.username
+    else:
+        print("Incorrect request")
+        return jsonify({'message': 'Incorrect request'}), 400
+    if (not username or username==''):
+        print("Username is null")
+        return jsonify({'message': 'Username is null'}), 400
+    if (not id or id=='' or id==0):
+        print("Goal ID is null")
+        return jsonify({'message': 'Goal ID is null'}), 400
+    try:
+        goal = Goal()
+        goal.getGoalById(id)
+        user = User()
+        user.getUserByUsername(username)
+        if goal.id == 0:
+            return jsonify({'message': 'Goal is not found'}), 404
+        elif (goal.isprivate and not user.id == goal.author) or (goal.isfriends and not goal.author in user.friends):
+            return jsonify({'message': 'Unable to get hidden data of other users'}), 403
+        else:
+            return jsonify(goal.toJSON()), 200
+    except:
+        print("Get goal data error")
+        return jsonify({'message': 'Server internal error'}), 500
 
+#  static String getFriends() => '$_baseUrl/friends';
+#
+#  static String inviteFriend(int id) => '$_baseUrl/friends/$id?action=invite';
+#
+#  static String acceptFriend(int id) => '$_baseUrl/friends/$id?action=accept';
+#
+#  static String rejectFriend(int id) => '$_baseUrl/friends/$id?action=reject';
+#
+#  static String removeFriend(int id) => '$_baseUrl/friends/$id?action=remove';
 
-#  static String getFriends(int id) => '$_baseUrl/users/$id';
-#
-#  static String setFriends(int id, String description) =>
-#      '$_baseUrl/users/$id?description=$description';
-#
-#  static String inviteFriends(int id, String description) =>
-#      '$_baseUrl/users/$id?description=$description';
-#
-#  static String createGoal() => '$_baseUrl/posts';
-#
-#  static String getFriendsGoals(int userId) =>
-#      '$_baseUrl/posts?per_page=100&status=publish,future&tags=27&categories=6&user=$userId';
-#
-#  static String getGoalById(int id) => '$_baseUrl/posts/$id';
-#
-#  static String updateGoal(int id) => '$_baseUrl/posts/$id';
-#
+# Get user's friends
+@app.route(BASE_URL+'/friends', methods=['GET'])
+@login
+def getFriends():
+    if request.method == 'GET':
+        username = request.authorization.username
+    else:
+        print("Incorrect request")
+        return jsonify({'message': 'Incorrect request'}), 400
+    if (not username or username==''):
+        print("Username is null")
+        return jsonify({'message': 'Username is null'}), 400
+    try:
+        user = User()
+        user.getUserByUsername(username)
+        return jsonify(user.friends), 200
+    except:
+        print("Get user's goals error")
+        return jsonify({'message': 'Server internal error'}), 500
+
 @app.route(BASE_URL+'/friends/<int:id>', methods=['GET', 'POST'])
 @login
 def friendsList(id):

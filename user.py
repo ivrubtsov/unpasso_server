@@ -10,6 +10,9 @@ DB_USER = os.getenv('DB_USER')
 DB_PASSWORD = os.getenv('DB_PASSWORD')
 DB_DATABASE = os.getenv('DB_DATABASE')
 DB_PORT = os.getenv('DB_PORT')
+DB_STRING = os.getenv('DB_STRING')
+if not DB_STRING:
+    DB_STRING = '$$'
 TMP_DIR = os.getenv('TMP_DIR')
 if not TMP_DIR:
     TMP_DIR = 'tmp'
@@ -120,6 +123,7 @@ class User:
 #            this.friendsRequests = data['friendsRequests']
 #        elif json['description'] and json['description']['friendsRequests']:
 #            this.friendsRequests = data['description']['friendsRequests']
+        return
 
     def toJSON(this):
         return {
@@ -156,7 +160,7 @@ class User:
     def setAchievements(this):
         try:
             cursor = db.cursor()
-            query = "DELETE FROM achievements WHERE id_user="+this.id+";"
+            query = "DELETE FROM achievements WHERE id_user="+str(this.id)+";"
             cursor.execute(query)
             if not this.achievements == []:
                 first = True
@@ -238,7 +242,7 @@ class User:
             print("Database get friends request error")
             return []
 
-    def getUserDataByUsername(this, request_username):
+    def getUserByUsername(this, request_username):
         try:
             cursor = db.cursor()
             query = "SELECT users.id, users.username, users.name, users.email, users.url, users.locale, users.date, users.avatar, users.rating FROM users WHERE users.username='"+request_username+"' AND users.status=2 ORDER BY users.date DESC LIMIT 1;"
@@ -263,10 +267,10 @@ class User:
             print("Get user data by username error")
             return        
 
-    def getUserDataById(this, request_id):
+    def getUserById(this, request_id):
         try:
             cursor = db.cursor()
-            query = "SELECT users.id, users.username, users.name, users.email, users.url, users.locale, users.date, users.avatar, users.rating FROM users WHERE users.id="+request_id+" AND users.status=2 ORDER BY users.date DESC LIMIT 1;"
+            query = "SELECT users.id, users.username, users.name, users.email, users.url, users.locale, users.date, users.avatar, users.rating FROM users WHERE users.id="+str(request_id)+" AND users.status=2 ORDER BY users.date DESC LIMIT 1;"
             cursor.execute(query)
             res = cursor.fetchone()
             for (id, username, name, email, url, locale, date, avatar, rating) in res:
@@ -334,11 +338,11 @@ class User:
             this.url = SITE_URL+"/author/"+this.username
             if this.id == 0:
                 this.date = datetime.now()
-                query = "INSERT INTO users (username, name, email, url, locale, date, password, avatar, rating, status) VALUES ('"+this.username+"', '"+this.name+"', '"+this.email+"', '"+this.url+"', '"+this.locale+"', '"+this.date.isoformat(" ", "seconds")+"', '"+this.password+"', "+str(this.avatar)+", "+str(this.rating)+", 2) RETURNING id;"
+                query = "INSERT INTO users (username, name, email, url, locale, date, password, avatar, rating, status) VALUES ("+DB_STRING+this.username+DB_STRING+", "+DB_STRING+this.name+DB_STRING+", "+DB_STRING+this.email+DB_STRING+", "+DB_STRING+this.url+DB_STRING+", "+DB_STRING+this.locale+DB_STRING+", '"+this.date.isoformat(" ", "seconds")+"', "+DB_STRING+this.password+DB_STRING+", "+str(this.avatar)+", "+str(this.rating)+", 2) RETURNING id;"
                 cursor.execute(query)
                 this.id = cursor.fetchone()[0]
             else:
-                query = "UPDATE users SET username='"+this.username+"', name='"+this.name+"', email='"+this.email+"', url='"+this.url+"', password='"+this.password+"', avatar="+str(this.avatar)+" WHERE id="+str(this.id)+";"
+                query = "UPDATE users SET username="+DB_STRING+this.username+DB_STRING+", name="+DB_STRING+this.name+DB_STRING+", email="+DB_STRING+this.email+DB_STRING+", url="+DB_STRING+this.url+DB_STRING+", password="+DB_STRING+this.password+DB_STRING+", avatar="+str(this.avatar)+" WHERE id="+str(this.id)+";"
                 cursor.execute(query)
                 this.setAchievements()
             db.commit()
