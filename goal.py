@@ -15,6 +15,12 @@ DB_PORT = os.getenv('DB_PORT')
 DB_STRING = os.getenv('DB_STRING')
 if not DB_STRING:
     DB_STRING = '$$'
+DB_SEARCH_LIMIT = os.getenv('DB_SEARCH_LIMIT')
+if not DB_SEARCH_LIMIT:
+    DB_SEARCH_LIMIT = 10
+DB_FETCH_LIMIT = os.getenv('DB_FETCH_LIMIT')
+if not DB_FETCH_LIMIT:
+    DB_FETCH_LIMIT = 100
 TMP_DIR = os.getenv('TMP_DIR')
 if not TMP_DIR:
     TMP_DIR = 'tmp'
@@ -209,7 +215,7 @@ class Goal:
             for (id, author, date, title, link, status, iscompleted, ispublic, isfriends, isprivate) in res:
                 this.id = id
                 this.author = author
-                this.date = date
+                this.date = datetime.fromisoformat(date)
                 this.title = title
                 this.link = link
                 this.status = status

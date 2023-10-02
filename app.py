@@ -1,10 +1,12 @@
 from flask import Flask, request, jsonify
+import json
 from functools import wraps
 import os
 from dotenv import load_dotenv
 from user import User, check_auth, check_auth_service
 from goal import Goal
 from goals import getUserGoals, getAvailableGoals
+from users import getPublicUserById, findUsers
 
 load_dotenv(".env")
 DB_SERVER = os.getenv('DB_SERVER')
@@ -15,6 +17,12 @@ DB_PORT = os.getenv('DB_PORT')
 DB_STRING = os.getenv('DB_STRING')
 if not DB_STRING:
     DB_STRING = '$$'
+DB_SEARCH_LIMIT = os.getenv('DB_SEARCH_LIMIT')
+if not DB_SEARCH_LIMIT:
+    DB_SEARCH_LIMIT = 10
+DB_FETCH_LIMIT = os.getenv('DB_FETCH_LIMIT')
+if not DB_FETCH_LIMIT:
+    DB_FETCH_LIMIT = 100
 TMP_DIR = os.getenv('TMP_DIR')
 if not TMP_DIR:
     TMP_DIR = 'tmp'
@@ -135,7 +143,7 @@ def authUser():
         if user.id == 0:
             return jsonify({'message': 'User is not found'}), 404
         else:
-            return jsonify(user.toJSON), 200
+            return jsonify(user.toJSON()), 200
     except:
         print("User auth error")
         return jsonify({'message': 'Server internal error'}), 500
@@ -191,10 +199,10 @@ def getUser(id):
         user.getUserById(id)
         if user.id == 0:
             return jsonify({'message': 'User is not found'}), 404
-#        elif not user.username == request.authorization.username:
-#            return jsonify({'message': 'Unable to access data of other users'}), 403
+        elif not user.username == request.authorization.username:
+            return jsonify(user.toPublicJSON()), 200
         else:
-            return jsonify(user.toJSON), 200
+            return jsonify(user.toJSON()), 200
     except:
         print("User data error")
         return jsonify({'message': 'Server internal error'}), 500
@@ -346,6 +354,9 @@ def getGoal(id):
 
 #  static String getFriends() => '$_baseUrl/friends';
 #
+#  static String searchFriends(String text) =>
+#      '$_baseUrl/friends/search?text=$text';
+#
 #  static String inviteFriend(int id) => '$_baseUrl/friends/$id?action=invite';
 #
 #  static String acceptFriend(int id) => '$_baseUrl/friends/$id?action=accept';
@@ -374,29 +385,67 @@ def getFriends():
         print("Get user's goals error")
         return jsonify({'message': 'Server internal error'}), 500
 
-@app.route(BASE_URL+'/friends/<int:id>', methods=['GET', 'POST'])
+# Search for friends
+@app.route(BASE_URL+'/friends/search', methods=['GET'])
 @login
-def friendsList(id):
-    # здесь мы обращаемся к базе данных и показываем список пользователей
+def getFriends():
+    if request.method == 'GET':
+        username = request.authorization.username
+    else:
+        print("Incorrect request")
+        return jsonify({'message': 'Incorrect request'}), 400
+    if (not username or username==''):
+        print("Username is null")
+        return jsonify({'message': 'Username is null'}), 400
+    if 'text' in request.args:
+        text = request.args.get('text')
+    else:
+        print("Search string is null")
+        return jsonify([]), 200
     try:
-        conn = psycopg2.connect(database=DB_DATABASE,
-                                host=DB_SERVER,
-                                user=DB_USER,
-                                password=DB_PASSWORD,
-                                port=DB_PORT)
+        return findUsers(text)
     except:
-        print("Не могу установить соединение с базой данных")
-        return 500
-    cursor = conn.cursor()
-    query = ("SELECT id_user,name,nickname,email FROM users")
-    cursor.execute(query)
-    res = cursor.fetchall()
-    users = []
-    for (userID, userName, userNickname, userEmail) in res:
-        users.append({'id_user':userID, 'name':userName, 'nickname':userNickname, 'email':userEmail})
-        print("Пользователь номер ", userID, ' имя: ', userName, ' ник: ', userNickname, ", почта: ",userEmail)
-    conn.close()
-    return jsonify(users)
+        print("Search users error")
+        return jsonify({'message': 'Server internal error'}), 500
+
+@app.route(BASE_URL+'/friends/requests/<int:id>', methods=['POST'])
+@login
+def friendsRequests(id):
+    try:
+        if request.method == 'POST':
+            username = request.authorization.username
+            if (not username or username==''):
+                print("Username is null")
+                return jsonify({'message': 'Username is null'}), 400
+            if (not id or id=='' or id==0):
+                print("Friend ID is null")
+                return jsonify({'message': 'Friend ID is null'}), 400
+            user = User()
+            user.getUserByUsername(username)
+            request_data = request.get_json()
+            data = json.loads(request_data)
+            if 'action' in data:
+                action = data['action']
+                if action == 'invite':
+                    return user.sendFriendsRequest(id)
+                elif action == 'accept':
+                    return user.acceptFriendsRequest(id)
+                elif action == 'reject':
+                    return user.rejectFriendsRequest(id)
+                elif action == 'remove':
+                    return user.removeFriend(id)
+                else:
+                    print("Incorrect request wrong action")
+                    return jsonify({'message': 'Incorrect request'}), 400
+            else:
+                print("Incorrect request no action")
+                return jsonify({'message': 'Incorrect request'}), 400
+        else:
+            print("Incorrect request")
+            return jsonify({'message': 'Incorrect request'}), 400
+    except:
+        print("Goal save error")
+        return jsonify({'message': 'Server internal error'}), 500
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=8000)
