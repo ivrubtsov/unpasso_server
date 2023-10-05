@@ -515,3 +515,56 @@ def check_auth(username, password):
 
 def check_auth_service(username, password):
     return username == SERVICE_USERNAME and password == SERVICE_PASSWORD
+
+def findUsers(request_string):
+    try:
+        cursor = db.cursor()
+        query = "SELECT users.id, users.username, users.name, users.email, users.url, users.date, users.avatar, users.rating FROM users WHERE (users.name LIKE "+DB_STRING+str(request_string)+DB_STRING+" OR users.username LIKE "+DB_STRING+str(request_string)+DB_STRING+") AND users.status=2 LIMIT "+DB_SEARCH_LIMIT+";"
+        cursor.execute(query)
+        res = cursor.fetchall()
+        publicUsers = []
+        for (id, username, name, email, url, date, avatar, rating) in res:
+            public = User(
+                id=id,
+                name=name,
+                username=username,
+                avatar=avatar,
+                rating=rating,
+            )
+            public.getAchievements()
+            publicUsers.append(public)
+        return jsonify(publicUsers), 200
+
+    except:
+        print("Search users by name or username error")
+        res = {
+            "code": "search_users_error",
+            "message": "Unknown error. Please, try again later",
+            "data": ''
+        }
+        return jsonify(res), 500
+
+def getPublicUserById(request_id):
+    try:
+        cursor = db.cursor()
+        query = "SELECT users.id, users.username, users.name, users.email, users.url, users.date, users.avatar, users.rating FROM users WHERE users.id="+str(request_id)+" AND users.status=2 LIMIT 1;"
+        cursor.execute(query)
+        res = cursor.fetchone()
+        public = User()
+        for (id, username, name, email, url, date, avatar, rating) in res:
+            public.id = id
+            public.name = name
+            public.username = username
+            public.avatar = avatar
+            public.rating = rating
+        public.getAchievements()
+        return jsonify(public), 200
+
+    except:
+        print("Get public user data by ID error")
+        res = {
+            "code": "get_user_public_error",
+            "message": "Unknown error. Please, try again later",
+            "data": ''
+        }
+        return jsonify(res), 500

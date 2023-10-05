@@ -3,10 +3,8 @@ import json
 from functools import wraps
 import os
 from dotenv import load_dotenv
-from user import User, check_auth, check_auth_service
-from goal import Goal
-from goals import getUserGoals, getAvailableGoals
-from users import getPublicUserById, findUsers
+from user import User, check_auth, check_auth_service, getPublicUserById, findUsers
+from goal import Goal, getUserGoals, getAvailableGoals
 
 load_dotenv(".env")
 DB_SERVER = os.getenv('DB_SERVER')
@@ -58,15 +56,15 @@ def login_service(f):
     return decorated_function
 
 # Server responce if a user didn't request anything
-@app.route("/", methods=["GET"])
+@app.route("/", methods=["GET"], endpoint='hello')
 @login_service
 def hello():
     return "Hello World!"
 
 # Server responce if a user didn't request anything
-@app.route("/auth", methods=["GET"])
+@app.route("/auth", methods=["GET"], endpoint='helloAuth')
 @login
-def hello():
+def helloAuth():
     return "User is authorized!"
 
 # Compatibility with the Wordpress site:
@@ -126,7 +124,7 @@ def hello():
 #
 
 # Authenticate user
-@app.route(BASE_URL+'/users/me', methods=['GET'])
+@app.route(BASE_URL+'/users/me', methods=['GET'], endpoint='authUser')
 @login
 def authUser():
     if request.method == 'GET':
@@ -149,7 +147,7 @@ def authUser():
         return jsonify({'message': 'Server internal error'}), 500
 
 # Register a new user
-@app.route(BASE_URL+'/users', methods=['GET', 'POST'])
+@app.route(BASE_URL+'/users', methods=['GET', 'POST'], endpoint='registerUser')
 @login_service
 def registerUser():
     try:
@@ -167,7 +165,7 @@ def registerUser():
         return jsonify({'message': 'Server internal error'}), 500
 
 # Delete a user
-@app.route(BASE_URL+'/users/<int:id>', methods=['DELETE'])
+@app.route(BASE_URL+'/users/<int:id>', methods=['DELETE'], endpoint='deleteUser')
 @login_service
 def deleteUser(id):
     if (not id or id=='' or id==0):
@@ -188,7 +186,7 @@ def deleteUser(id):
         return jsonify({'message': 'Server internal error'}), 500
 
 # Get a user data
-@app.route(BASE_URL+'/users/<int:id>', methods=['GET'])
+@app.route(BASE_URL+'/users/<int:id>', methods=['GET'], endpoint='getUser')
 @login_service
 def getUser(id):
     if (not id or id=='' or id==0):
@@ -209,7 +207,7 @@ def getUser(id):
 
 # Update user's data
 # Don't forget about achievements in the description fiels
-@app.route(BASE_URL+'/users/<int:id>', methods=['POST'])
+@app.route(BASE_URL+'/users/<int:id>', methods=['POST'], endpoint='updateUser')
 @login
 def updateUser(id):
     if (not id or id=='' or id==0):
@@ -236,7 +234,7 @@ def updateUser(id):
         return jsonify({'message': 'Server internal error'}), 500
 
 # Create a goal
-@app.route(BASE_URL+'/posts', methods=['POST'])
+@app.route(BASE_URL+'/posts', methods=['POST'], endpoint='createGoal')
 @login
 def createGoal():
     try:
@@ -254,7 +252,7 @@ def createGoal():
         return jsonify({'message': 'Server internal error'}), 500
 
 # Get user's goals - personal and available
-@app.route(BASE_URL+'/posts', methods=['GET'])
+@app.route(BASE_URL+'/posts', methods=['GET'], endpoint='getUserGoals')
 @login
 def getUserGoals():
     if request.method == 'GET':
@@ -291,7 +289,7 @@ def getUserGoals():
         return jsonify({'message': 'Server internal error'}), 500
 
 # Complete or update the goal
-@app.route(BASE_URL+'/posts/<int:id>', methods=['POST'])
+@app.route(BASE_URL+'/posts/<int:id>', methods=['POST'], endpoint='updateGoal')
 @login
 def updateGoal(id):
     if request.method == 'POST':
@@ -323,7 +321,7 @@ def updateGoal(id):
         return jsonify({'message': 'Server internal error'}), 500
 
 # Get the goal by ID
-@app.route(BASE_URL+'/posts/<int:id>', methods=['GET'])
+@app.route(BASE_URL+'/posts/<int:id>', methods=['GET'], endpoint='getGoal')
 @login
 def getGoal(id):
     if request.method == 'GET':
@@ -366,7 +364,7 @@ def getGoal(id):
 #  static String removeFriend(int id) => '$_baseUrl/friends/$id?action=remove';
 
 # Get user's friends
-@app.route(BASE_URL+'/friends', methods=['GET'])
+@app.route(BASE_URL+'/friends', methods=['GET'], endpoint='getFriends')
 @login
 def getFriends():
     if request.method == 'GET':
@@ -386,9 +384,9 @@ def getFriends():
         return jsonify({'message': 'Server internal error'}), 500
 
 # Get user's friends received requests
-@app.route(BASE_URL+'/friends/requests/received', methods=['GET'])
+@app.route(BASE_URL+'/friends/requests/received', methods=['GET'], endpoint='getFriendsRequestsReceived')
 @login
-def getFriends():
+def getFriendsRequestsReceived():
     if request.method == 'GET':
         username = request.authorization.username
     else:
@@ -406,9 +404,9 @@ def getFriends():
         return jsonify({'message': 'Server internal error'}), 500
 
 # Get user's friends sent requests
-@app.route(BASE_URL+'/friends/requests/sent', methods=['GET'])
+@app.route(BASE_URL+'/friends/requests/sent', methods=['GET'], endpoint='getFriendsRequestsSent')
 @login
-def getFriends():
+def getFriendsRequestsSent():
     if request.method == 'GET':
         username = request.authorization.username
     else:
@@ -426,9 +424,9 @@ def getFriends():
         return jsonify({'message': 'Server internal error'}), 500
 
 # Search for friends
-@app.route(BASE_URL+'/friends/search', methods=['GET'])
+@app.route(BASE_URL+'/friends/search', methods=['GET'], endpoint='searchFriends')
 @login
-def getFriends():
+def searchFriends():
     if request.method == 'GET':
         username = request.authorization.username
     else:
@@ -448,9 +446,9 @@ def getFriends():
         print("Search users error")
         return jsonify({'message': 'Server internal error'}), 500
 
-@app.route(BASE_URL+'/friends/requests/<int:id>', methods=['POST'])
+@app.route(BASE_URL+'/friends/requests/<int:id>', methods=['POST'], endpoint='friendsRequest')
 @login
-def friendsRequests(id):
+def friendsRequest(id):
     try:
         if request.method == 'POST':
             username = request.authorization.username
