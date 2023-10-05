@@ -132,6 +132,15 @@ class User:
         return
 
     def toJSON(this):
+        friendsIds = []
+        friendsRequestsReceivedIds = []
+        friendsRequestsSentIds = []
+        for friend in this.friends:
+            friendsIds.append(friend['id'])
+        for friendsRequestReceived in this.friendsRequestsReceived:
+            friendsRequestsReceivedIds.append(friendsRequestReceived['id'])
+        for friendsRequestSent in this.friendsRequestsSent:
+            friendsRequestsSentIds.append(friendsRequestSent['id'])        
         return {
                 'id': this.id,
                 'name': this.name,
@@ -142,9 +151,9 @@ class User:
                 'description': {
                     'achievements': this.achievements,
                     'avatar': this.avatar,
-                    'friends': this.friends,
-                    'friendsRequestsReceived': this.friendsRequestsReceived,
-                    'friendsRequestsSent': this.friendsRequestsSent,
+                    'friends': friendsIds,
+                    'friendsRequestsReceived': friendsRequestsReceivedIds,
+                    'friendsRequestsSent': friendsRequestsSentIds,
                     },
                 'link': SITE_URL+'/author/'+this.username,
         }
@@ -209,7 +218,7 @@ class User:
     def getFriendsRequestsSent(this):
         try:
             cursor = db.cursor()
-            query = "SELECT friends_requests.id, friends_requests.id_status, users.id, users.username, users.name, users.avatar, users.rating FROM friends_requests, users WHERE friends_requests.id_source="+this.id+" AND friends_requests.id_target=users.id AND users.status=2 AND friends_requests.id_status=1;"
+            query = "SELECT friends_requests.id, friends_requests.id_status, users.id, users.username, users.name, users.avatar, users.rating FROM friends_requests, users WHERE friends_requests.id_source="+this.id+" AND friends_requests.id_target=users.id AND users.status=2 AND friends_requests.id_status=1 ORDER BY friends_requests DESC;"
             cursor.execute(query)
             res = cursor.fetchall()
             friendsRequestsSent = []
@@ -231,7 +240,7 @@ class User:
     def getFriendsRequestsReceived(this):
         try:
             cursor = db.cursor()
-            query = "SELECT friends_requests.id, friends_requests.id_status, users.id, users.username, users.name, users.avatar, users.rating FROM friends_requests, users WHERE friends_requests.id_target="+this.id+" AND friends_requests.id_source=users.id AND users.status=2 AND friends_requests.id_status=1;"
+            query = "SELECT friends_requests.id, friends_requests.id_status, users.id, users.username, users.name, users.avatar, users.rating FROM friends_requests, users WHERE friends_requests.id_target="+this.id+" AND friends_requests.id_source=users.id AND users.status=2 AND friends_requests.id_status=1 ORDER BY friends_requests DESC;"
             cursor.execute(query)
             res = cursor.fetchall()
             friendsRequestsReceived = []
@@ -307,7 +316,8 @@ class User:
                 if friend.id == friend_id:
                     return jsonify(this.toJSON()), 200
             cursor = db.cursor()
-            query = "INSERT INTO friends_requests (id_source, id_target, id_status) VALUES ("+str(this.id)+", "+str(friend_id)+", 1);"
+            date = datetime.now()
+            query = "INSERT INTO friends_requests (id_source, id_target, id_status, date) VALUES ("+str(this.id)+", "+str(friend_id)+", 1, '"+date.isoformat(" ", "seconds")+"');"
             cursor.execute(query)
             db.commit()
             this.friendsRequestsSent = this.getFriendsRequestsSent()
