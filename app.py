@@ -385,6 +385,46 @@ def getFriends():
         print("Get user's goals error")
         return jsonify({'message': 'Server internal error'}), 500
 
+# Get user's friends received requests
+@app.route(BASE_URL+'/friends/requests/received', methods=['GET'])
+@login
+def getFriends():
+    if request.method == 'GET':
+        username = request.authorization.username
+    else:
+        print("Incorrect request")
+        return jsonify({'message': 'Incorrect request'}), 400
+    if (not username or username==''):
+        print("Username is null")
+        return jsonify({'message': 'Username is null'}), 400
+    try:
+        user = User()
+        user.getUserByUsername(username)
+        return jsonify(user.friendsRequestsReceived), 200
+    except:
+        print("Get user's goals error")
+        return jsonify({'message': 'Server internal error'}), 500
+
+# Get user's friends sent requests
+@app.route(BASE_URL+'/friends/requests/sent', methods=['GET'])
+@login
+def getFriends():
+    if request.method == 'GET':
+        username = request.authorization.username
+    else:
+        print("Incorrect request")
+        return jsonify({'message': 'Incorrect request'}), 400
+    if (not username or username==''):
+        print("Username is null")
+        return jsonify({'message': 'Username is null'}), 400
+    try:
+        user = User()
+        user.getUserByUsername(username)
+        return jsonify(user.friendsRequestsSent), 200
+    except:
+        print("Get user's goals error")
+        return jsonify({'message': 'Server internal error'}), 500
+
 # Search for friends
 @app.route(BASE_URL+'/friends/search', methods=['GET'])
 @login

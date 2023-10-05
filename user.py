@@ -132,6 +132,15 @@ class User:
         return
 
     def toJSON(this):
+        friendsIds = []
+        friendsRequestsReceivedIds = []
+        friendsRequestsSentIds = []
+        for friend in this.friends:
+            friendsIds.append(friend['id'])
+        for friendsRequestReceived in this.friendsRequestsReceived:
+            friendsRequestsReceivedIds.append(friendsRequestReceived['id'])
+        for friendsRequestSent in this.friendsRequestsSent:
+            friendsRequestsSentIds.append(friendsRequestSent['id'])        
         return {
                 'id': this.id,
                 'name': this.name,
@@ -142,9 +151,9 @@ class User:
                 'description': {
                     'achievements': this.achievements,
                     'avatar': this.avatar,
-                    'friends': this.friends,
-                    'friendsRequestsReceived': this.friendsRequestsReceived,
-                    'friendsRequestsSent': this.friendsRequestsSent,
+                    'friends': friendsIds,
+                    'friendsRequestsReceived': friendsRequestsReceivedIds,
+                    'friendsRequestsSent': friendsRequestsSentIds,
                     },
                 'link': SITE_URL+'/author/'+this.username,
         }
