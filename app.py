@@ -3,10 +3,8 @@ import json
 from functools import wraps
 import os
 from dotenv import load_dotenv
-from user import User, check_auth, check_auth_service
-from goal import Goal
-from goals import getUserGoals, getAvailableGoals
-from users import getPublicUserById, findUsers
+from user import User, check_auth, check_auth_service, getPublicUserById, findUsers
+from goal import Goal, getUserGoals, getAvailableGoals
 
 load_dotenv(".env")
 DB_SERVER = os.getenv('DB_SERVER')
