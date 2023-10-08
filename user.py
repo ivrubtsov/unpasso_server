@@ -2,6 +2,7 @@ from flask import jsonify
 import json
 import psycopg2
 import os
+import random
 from datetime import datetime
 from dotenv import load_dotenv
 load_dotenv(".env")
@@ -28,6 +29,12 @@ if not BASE_URL:
     BASE_URL = '/wp-json/wp/v2'
 SERVICE_USERNAME = os.getenv('SERVICE_USERNAME')
 SERVICE_PASSWORD = os.getenv('SERVICE_PASSWORD')
+MASTER_USER = os.getenv('MASTER_USER')
+if not MASTER_USER:
+    MASTER_USER = 737
+AVATAR_MAX = os.getenv('AVATAR_MAX')
+if not AVATAR_MAX:
+    AVATAR_MAX = 50
 
 try:
     db = psycopg2.connect(database=DB_DATABASE,
@@ -140,7 +147,11 @@ class User:
         for friendsRequestReceived in this.friendsRequestsReceived:
             friendsRequestsReceivedIds.append(friendsRequestReceived['id'])
         for friendsRequestSent in this.friendsRequestsSent:
-            friendsRequestsSentIds.append(friendsRequestSent['id'])        
+            friendsRequestsSentIds.append(friendsRequestSent['id']) 
+        if not this.avatar or this.avatar == 0:
+            this.avatar = random.randint(1, AVATAR_MAX)
+            this.save()
+       
         return {
                 'id': this.id,
                 'name': this.name,
@@ -154,6 +165,23 @@ class User:
                     'friends': friendsIds,
                     'friendsRequestsReceived': friendsRequestsReceivedIds,
                     'friendsRequestsSent': friendsRequestsSentIds,
+                    },
+                'link': SITE_URL+'/author/'+this.username,
+        }
+
+    def toPublicJSON(this):
+        if not this.avatar or this.avatar == 0:
+            this.avatar = random.randint(1, AVATAR_MAX)
+            this.save()
+
+        return {
+                'id': this.id,
+                'name': this.name,
+                'username': this.username,
+                'url': this.url,
+                'description': {
+                    'achievements': this.achievements,
+                    'avatar': this.avatar,
                     },
                 'link': SITE_URL+'/author/'+this.username,
         }
@@ -277,6 +305,8 @@ class User:
             db.commit()
             this.friends = this.getFriends()
             this.friendsRequestsReceived = this.getFriendsRequestsReceived()
+            this.calculateRating()
+            this.save()
             return jsonify(this.toJSON()), 200
         except:
             print("Database accept friends request error")
@@ -321,6 +351,8 @@ class User:
             cursor.execute(query)
             db.commit()
             this.friendsRequestsSent = this.getFriendsRequestsSent()
+            this.calculateRating()
+            this.save()
             return jsonify(this.toJSON()), 200
         except:
             print("Database send friends request error")
@@ -427,7 +459,7 @@ class User:
                 return jsonify(res), 400
             # Check username
             cursor = db.cursor()
-            query = "SELECT users.id FROM users WHERE users.username='"+this.username+"' AND users.status=2 LIMIT 1;"
+            query = "SELECT users.id FROM users WHERE users.username='"+this.username+"' AND users.status=2 AND NOT users.id="+str(this.id)+" LIMIT 1;"
             cursor.execute(query)
             if cursor.rowcount>0:
                 res = {
@@ -437,7 +469,8 @@ class User:
                 }
                 return jsonify(res), 400
             # Check email exists
-            query = "SELECT users.id FROM users WHERE users.email='"+this.email+"' AND users.status=2 LIMIT 1;"
+
+            query = "SELECT users.id FROM users WHERE users.email='"+this.email+"' AND users.status=2 AND NOT users.id="+str(this.id)+" LIMIT 1;"
             cursor.execute(query)
             if cursor.rowcount>0:
                 res = {
@@ -452,8 +485,10 @@ class User:
                 query = "INSERT INTO users (username, name, email, url, locale, date, password, avatar, rating, status) VALUES ("+DB_STRING+this.username+DB_STRING+", "+DB_STRING+this.name+DB_STRING+", "+DB_STRING+this.email+DB_STRING+", "+DB_STRING+this.url+DB_STRING+", "+DB_STRING+this.locale+DB_STRING+", '"+this.date.isoformat(" ", "seconds")+"', "+DB_STRING+this.password+DB_STRING+", "+str(this.avatar)+", "+str(this.rating)+", 2) RETURNING id;"
                 cursor.execute(query)
                 this.id = cursor.fetchone()[0]
+                this.initialInvite()
             else:
-                query = "UPDATE users SET username="+DB_STRING+this.username+DB_STRING+", name="+DB_STRING+this.name+DB_STRING+", email="+DB_STRING+this.email+DB_STRING+", url="+DB_STRING+this.url+DB_STRING+", password="+DB_STRING+this.password+DB_STRING+", avatar="+str(this.avatar)+" WHERE id="+str(this.id)+";"
+                this.rating = this.calculateRating()
+                query = "UPDATE users SET username="+DB_STRING+this.username+DB_STRING+", name="+DB_STRING+this.name+DB_STRING+", email="+DB_STRING+this.email+DB_STRING+", url="+DB_STRING+this.url+DB_STRING+", password="+DB_STRING+this.password+DB_STRING+", avatar="+str(this.avatar)+", rating="+str(this.rating)+" WHERE id="+str(this.id)+";"
                 cursor.execute(query)
                 this.setAchievements()
             db.commit()
@@ -484,6 +519,52 @@ class User:
                 "data": ''
             }
             return jsonify(res), 500
+
+    def initialInvite(this):
+        try:
+            cursor = db.cursor()
+            date = datetime.now()
+            query = "INSERT INTO friends_requests (id_source, id_target, id_status, date) VALUES ("+str(MASTER_USER)+", "+str(this.id)+", 1, '"+date.isoformat(" ", "seconds")+"');"
+            cursor.execute(query)
+            db.commit()
+            this.friendsRequestsSent = this.getFriendsRequestsSent()
+            return
+        except:
+            print("User Initial invite error")
+            res = {
+                "code": "user_initial_error",
+                "message": "Unknown error. Please, try again later",
+                "data": ''
+            }
+            return jsonify(res), 500
+        
+    def calculateRating(this):
+        try:
+            cursor = db.cursor()
+            query = "SELECT count(posts.id) FROM posts WHERE posts.author="+str(this.id)+" AND posts.status=1;"
+            cursor.execute(query)
+            if cursor.rowcount>0:
+                res = cursor.fetchone()
+                goals = res[0]
+            else:
+                goals = 0
+
+            query = "SELECT count(posts.id) FROM posts WHERE posts.author="+str(this.id)+" AND posts.status=1 AND posts.iscompleted=TRUE;"
+            cursor.execute(query)
+            if cursor.rowcount>0:
+                res = cursor.fetchone()
+                goalsCompleted = res[0]
+            else:
+                goalsCompleted = 0
+
+            friends = len(this.friends)
+            friendsRequestsSent = len(this.friendsRequestsSent)
+            achievements = len(this.achievements)
+            rating = goals + goalsCompleted*3 + friends*7 + achievements*37 + friendsRequestsSent
+            return rating
+        except:
+            print("User rating calculation error")
+            return 0
 
 
 # Check emails
