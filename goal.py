@@ -30,6 +30,9 @@ if not BASE_URL:
     BASE_URL = '/wp-json/wp/v2'
 SERVICE_USERNAME = os.getenv('SERVICE_USERNAME')
 SERVICE_PASSWORD = os.getenv('SERVICE_PASSWORD')
+MASTER_USER = os.getenv('MASTER_USER')
+if not MASTER_USER:
+    MASTER_USER = 737
 
 try:
     db = psycopg2.connect(database=DB_DATABASE,

@@ -30,6 +30,9 @@ if not BASE_URL:
     BASE_URL = '/wp-json/wp/v2'
 SERVICE_USERNAME = os.getenv('SERVICE_USERNAME')
 SERVICE_PASSWORD = os.getenv('SERVICE_PASSWORD')
+MASTER_USER = os.getenv('MASTER_USER')
+if not MASTER_USER:
+    MASTER_USER = 737
 
 app = Flask(__name__)
 
@@ -243,6 +246,9 @@ def createGoal():
             goal = Goal()
             goal.fromJSON(request_data)
             res = goal.save()
+            user = User()
+            user.getUserById(goal.author)
+            user.save()
             return res
         else:
             print("Incorrect request")
@@ -308,6 +314,7 @@ def updateGoal(id):
         goal.getGoalById(id)
         user = User()
         user.getUserByUsername(username)
+        user.save()
         if goal.id == 0:
             return jsonify({'message': 'Goal is not found'}), 404
         elif not user.id == goal.author:
@@ -446,6 +453,7 @@ def searchFriends():
         print("Search users error")
         return jsonify({'message': 'Server internal error'}), 500
 
+# Process friends requests
 @app.route(BASE_URL+'/friends/requests/<int:id>', methods=['POST'], endpoint='friendsRequest')
 @login
 def friendsRequest(id):
