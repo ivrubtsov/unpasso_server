@@ -153,7 +153,7 @@ def authUser():
 @app.route(BASE_URL+'/users', methods=['GET', 'POST'], endpoint='registerUser')
 @login_service
 def registerUser():
-    try:
+#    try:
         print('1')
         if request.method == 'POST':
             print('2')
@@ -170,9 +170,9 @@ def registerUser():
         else:
             print("Incorrect request")
             return jsonify({'message': 'Incorrect request'}), 400
-    except:
-        print("User registration error")
-        return jsonify({'message': 'Server internal error'}), 500
+#    except:
+#        print("User registration error")
+#        return jsonify({'message': 'Server internal error'}), 500
 
 # Delete a user
 @app.route(BASE_URL+'/users/<int:id>', methods=['DELETE'], endpoint='deleteUser')
