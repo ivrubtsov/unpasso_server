@@ -154,11 +154,17 @@ def authUser():
 @login_service
 def registerUser():
     try:
+        print('1')
         if request.method == 'POST':
+            print('2')
             request_data = request.get_json()
+            print('3')
             user = User()
+            print('4')
             user.fromJSON(request_data)
+            print('5')
             res = user.save()
+            print('6')
             return res
         else:
             print("Incorrect request")
