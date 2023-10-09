@@ -58,12 +58,12 @@ def crypt_private(plainText, wordpressHash=None):
         return output
     # generate the first hash from salt and word to try
     strEncode = str(salt)+str(plainText)
-    plainTextHash = md5(strEncode.encode('utf-8')).digest()
+    plainTextHash = md5(encode64(strEncode,16)).digest()
     print(plainTextHash)
     for i in range (count):
         # regenerate the hash
         strEncode = str(plainTextHash)+str(plainText)
-        plainTextHash = md5(strEncode.encode('utf-8')).digest()
+        plainTextHash = md5(encode64(strEncode,16)).digest()
         print(plainTextHash)
 
     output = wordpressHash[0:12]
