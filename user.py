@@ -481,7 +481,7 @@ class User:
                     'data': {
                         'status': 400,
                         'params': {
-                            'username': "Invalid username."
+                            'username': 'Invalid username.'
                         },
                         'details': {
                             'username': {
@@ -505,7 +505,7 @@ class User:
                     'data': {
                         'status': 400,
                         'params': {
-                            'email': "Email address is used."
+                            'email': 'Email address is used.'
                         },
                         'details': {
                             'email': {
