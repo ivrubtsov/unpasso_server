@@ -43,7 +43,7 @@ def login(f):
         if not auth:
             return jsonify({'message': 'Authentication required'}), 401
         if not check_auth(auth.username, auth.password):
-            return jsonify({'message': 'User not found'}), 403
+            return jsonify({'message': 'Incorrect password.'}), 403
         return f(*args, **kwargs)
     return decorated_function
 
@@ -54,7 +54,7 @@ def login_service(f):
         if not auth:
             return jsonify({'message': 'Authentication required'}), 401
         if not check_auth_service(auth.username, auth.password):
-            return jsonify({'message': 'User not found'}), 403
+            return jsonify({'message': 'Incorrect password.'}), 403
         return f(*args, **kwargs)
     return decorated_function
 

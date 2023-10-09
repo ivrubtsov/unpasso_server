@@ -477,7 +477,7 @@ class User:
                 print('user exists')
                 res = {
                     'code': 'existing_user_login',
-                    'message': 'Sorry, that username already exists!',
+                    'message': 'Sorry, this username is already taken!',
                     'data': '',
                 }
                 return jsonify(res), 500
@@ -489,7 +489,7 @@ class User:
                 print('email exists')
                 res = {
                     'code': 'existing_user_email',
-                    'message': 'Sorry, that email address is already used!',
+                    'message': 'Sorry, this email address is already used!',
                     'data': '',
                 }
                 return jsonify(res), 500
