@@ -165,7 +165,7 @@ def registerUser():
             print('5')
             res = user.save()
             print('6')
-            print(jsonify(res))
+            print(res)
             return res
         else:
             print("Incorrect request")
