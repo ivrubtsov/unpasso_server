@@ -478,21 +478,9 @@ class User:
                 res = {
                     'code': 'existing_user_login',
                     'message': 'Sorry, that username already exists!',
-                    'data': {
-                        'status': 400,
-                        'params': {
-                            'username': 'Invalid username.'
-                        },
-                        'details': {
-                            'username': {
-                                'code': 'existing_user_login',
-                                'message': 'Sorry, that username already exists!',
-                                'data': '',
-                            }
-                        }
-                    },
+                    'data': '',
                 }
-                return jsonify(res), 400
+                return jsonify(res), 500
             # Check email exists
 
             query = "SELECT users.id FROM users WHERE users.email='"+this.email+"' AND users.status=2 AND NOT users.id="+str(this.id)+" LIMIT 1;"
@@ -502,21 +490,9 @@ class User:
                 res = {
                     'code': 'existing_user_email',
                     'message': 'Sorry, that email address is already used!',
-                    'data': {
-                        'status': 400,
-                        'params': {
-                            'email': 'Email address is used.'
-                        },
-                        'details': {
-                            'email': {
-                                'code': 'existing_user_email',
-                                'message': 'Sorry, that email address is already used!',
-                                'data': '',
-                            }
-                        }
-                    },
+                    'data': '',
                 }
-                return jsonify(res), 400
+                return jsonify(res), 500
             this.url = SITE_URL+"/author/"+this.username
             if this.id == 0:
                 this.date = datetime.now()
