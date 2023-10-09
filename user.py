@@ -452,18 +452,18 @@ class User:
             #Check email format
             if not checkEmail(this.email):
                 res = {
-                    "code": "rest_invalid_param",
-                    "message": "Invalid parameter(s): email",
-                    "data": {
-                        "status": 400,
-                        "params": {
-                            "email": "Invalid email address."
+                    'code': 'rest_invalid_param',
+                    'message': 'Invalid parameter(s): email',
+                    'data': {
+                        'status': 400,
+                        'params': {
+                            'email': "Invalid email address."
                         },
-                        "details": {
-                            "email": {
-                                "code": "rest_invalid_email",
-                                "message": "Invalid email address.",
-                                "data": ''
+                        'details': {
+                            'email': {
+                                'code': 'rest_invalid_email',
+                                'message': 'Invalid email address.',
+                                'data': '',
                             }
                         }
                     }
@@ -476,21 +476,9 @@ class User:
             if cursor.rowcount>0:
                 print('user exists')
                 res = {
-                    "code": "existing_user_login",
-                    "message": "Sorry, that username already exists!",
-                    "data": {
-                        "status": 400,
-                        "params": {
-                            "username": "Sorry, that username already exists!"
-                        },
-                        "details": {
-                            "username": {
-                                "code": "existing_user_login",
-                                "message": "Sorry, that username already exists!",
-                                "data": ''
-                            }
-                        }
-                    }
+                    'code': 'existing_user_login',
+                    'message': 'Sorry, that username already exists!',
+                    'data': '',
                 }
                 return jsonify(res), 400
             # Check email exists
@@ -500,21 +488,9 @@ class User:
             if cursor.rowcount>0:
                 print('email exists')
                 res = {
-                    "code": "existing_user_email",
-                    "message": "Sorry, that email address is already used!",
-                    "data": {
-                        "status": 400,
-                        "params": {
-                            "email": "Sorry, that email address is already used!"
-                        },
-                        "details": {
-                            "email": {
-                                "code": "existing_user_email",
-                                "message": "Sorry, that email address is already used!",
-                                "data": ''
-                            }
-                        }
-                    }
+                    'code': 'existing_user_email',
+                    'message': 'Sorry, that email address is already used!',
+                    'data': '',
                 }
                 return jsonify(res), 400
             this.url = SITE_URL+"/author/"+this.username
