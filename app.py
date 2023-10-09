@@ -395,7 +395,7 @@ def getFriends():
         user.getUserByUsername(username)
         return jsonify(user.friends), 200
     except:
-        print("Get user's goals error")
+        print("Get user's friends error")
         return jsonify({'message': 'Server internal error'}), 500
 
 # Get user's friends received requests
@@ -415,7 +415,7 @@ def getFriendsRequestsReceived():
         user.getUserByUsername(username)
         return jsonify(user.friendsRequestsReceived), 200
     except:
-        print("Get user's goals error")
+        print("Get user's friends received error")
         return jsonify({'message': 'Server internal error'}), 500
 
 # Get user's friends sent requests
@@ -435,7 +435,7 @@ def getFriendsRequestsSent():
         user.getUserByUsername(username)
         return jsonify(user.friendsRequestsSent), 200
     except:
-        print("Get user's goals error")
+        print("Get user's friends sent error")
         return jsonify({'message': 'Server internal error'}), 500
 
 # Search for friends

@@ -310,21 +310,22 @@ def getUserGoals(user_id, page, per_page):
         cursor.execute(query)
         res = cursor.fetchone()
         goals = []
-        for (id, author, date, title, link, status, iscompleted, ispublic, isfriends, isprivate) in res:
-            goal = Goal(
-                id,
-                author,
-                datetime.fromisoformat(date),
-                title,
-                link,
-                status,
-                iscompleted,
-                ispublic,
-                isfriends,
-                isprivate,
-            )
-            goal.getLikes()
-            goals.append(goal.toJSON())
+        if cursor.rowcount>0:
+            for (id, author, date, title, link, status, iscompleted, ispublic, isfriends, isprivate) in res:
+                goal = Goal(
+                    id,
+                    author,
+                    datetime.fromisoformat(date),
+                    title,
+                    link,
+                    status,
+                    iscompleted,
+                    ispublic,
+                    isfriends,
+                    isprivate,
+                )
+                goal.getLikes()
+                goals.append(goal.toJSON())
         return jsonify(goals), 200
     except:
         print("Get user's goals error")

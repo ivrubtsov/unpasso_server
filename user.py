@@ -207,8 +207,9 @@ class User:
             cursor.execute(query)
             res = cursor.fetchall()
             achs = []
-            for (id_achievement) in res:
-                achs.append(id_achievement)
+            if cursor.rowcount>0:
+                for (id_achievement) in res:
+                    achs.append(id_achievement)
             return achs
         except:
             print("Database get achievements request error")
@@ -242,17 +243,18 @@ class User:
             cursor.execute(query)
             res = cursor.fetchall()
             friends = []
-            for (id, username, name, avatar, rating) in res:
-                friends.append({
-                    'id': id,
-                    'username': username,
-                    'name': name,
-                    'avatar': avatar,
-                    'rating': rating,
-                })
+            if cursor.rowcount>0:
+                for (id, username, name, avatar, rating) in res:
+                    friends.append({
+                        'id': id,
+                        'username': username,
+                        'name': name,
+                        'avatar': avatar,
+                        'rating': rating,
+                    })
             return friends
         except:
-            print("Database get friends request error")
+            print("Database get friends error")
             return []
 
     def getFriendsRequestsSent(this):
@@ -262,19 +264,20 @@ class User:
             cursor.execute(query)
             res = cursor.fetchall()
             friendsRequestsSent = []
-            for (requestid, status, userid, username, name, avatar, rating) in res:
-                friendsRequestsSent.append({
-                    'requestId': requestid,
-                    'status': status,
-                    'id': userid,
-                    'username': username,
-                    'name': name,
-                    'avatar': avatar,
-                    'rating': rating,
-                })
+            if cursor.rowcount>0:
+                for (requestid, status, userid, username, name, avatar, rating) in res:
+                    friendsRequestsSent.append({
+                        'requestId': requestid,
+                        'status': status,
+                        'id': userid,
+                        'username': username,
+                        'name': name,
+                        'avatar': avatar,
+                        'rating': rating,
+                    })
             return friendsRequestsSent
         except:
-            print("Database get friends request error")
+            print("Database get friends requests sent error")
             return []
 
     def getFriendsRequestsReceived(this):
@@ -284,19 +287,20 @@ class User:
             cursor.execute(query)
             res = cursor.fetchall()
             friendsRequestsReceived = []
-            for (requestid, status, userid, username, name, avatar, rating) in res:
-                friendsRequestsReceived.append({
-                    'requestId': requestid,
-                    'status': status,
-                    'id': userid,
-                    'username': username,
-                    'name': name,
-                    'avatar': avatar,
-                    'rating': rating,
-                })
+            if cursor.rowcount>0:
+                for (requestid, status, userid, username, name, avatar, rating) in res:
+                    friendsRequestsReceived.append({
+                        'requestId': requestid,
+                        'status': status,
+                        'id': userid,
+                        'username': username,
+                        'name': name,
+                        'avatar': avatar,
+                        'rating': rating,
+                    })
             return friendsRequestsReceived
         except:
-            print("Database get friends request error")
+            print("Database get friends requests received error")
             return []
 
     def acceptFriendsRequest(this, friend_id):
