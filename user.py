@@ -98,44 +98,54 @@ class User:
     def fromJSON(this, jsonData):
         if not jsonData:
             return
+        print('11')
         data = json.loads(jsonData)
+        print('12')
+        print(this.id)
         if 'id' in data:
             this.id = data['id']
-        if json['name']:
+        print(this.id)
+        print(this.name)
+        if 'name' in data:
             this.name = data['name']
-        if json['date']:
+        print(this.name)
+        print(this.name)        
+        if 'date' in data:
             this.date = datetime.fromisoformat(data['date'])
-        if json['username']:
+        print(this.name)
+        print(this.username) 
+        if 'username' in data:
             this.username = data['username']
-        if json['password']:
+        print(this.username)
+        print(this.password) 
+        if 'password' in data:
             this.password = wp_crypt.crypt_private(data['password'])
-        if json['avatar']:
+        print(this.password)
+        print(this.avatar) 
+        if 'avatar' in data:
             this.avatar = data['avatar']
-        elif json['description'] and data['description']['avatar']:
+        elif 'description' in data and 'avatar' in data['description']:
             this.avatar = data['description']['avatar']
-        if json['email']:
+        print(this.avatar)
+        print('12')
+        
+        if 'email' in data:
             this.email = data['email']
-        if json['url']:
+        if 'url' in data:
             this.url = data['url']
-        if json['locale']:
+        if 'locale' in data:
             this.locale = data['locale']
-        if json['rating']:
+        if 'rating' in data:
             this.rating = data['rating']
-        if json['status']:
+        elif 'description' in data and 'rating' in data['description']:
+            this.rating = data['description']['rating']
+        if 'status' in data:
             this.status = data['status']
-        if json['achievements']:
+        if 'achievements' in data:
             this.achievements = data['achievements']
-        elif json['description'] and json['description']['achievements']:
+        elif 'description' in data and 'achievements' in data['description']:
             this.achievements = data['description']['achievements']
-#        this.setAchievements()
-#        if json['friends']:
-#            this.friends = json['friends']
-#        elif json['description'] and json['description']['friends']:
-#            this.friends = data['description']['friends']
-#        if json['friendsRequests']:
-#            this.friendsRequests = data['friendsRequests']
-#        elif json['description'] and json['description']['friendsRequests']:
-#            this.friendsRequests = data['description']['friendsRequests']
+        print('13')
         return
 
     def toJSON(this):
