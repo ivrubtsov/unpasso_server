@@ -403,7 +403,8 @@ class User:
             query = "SELECT users.id, users.username, users.name, users.email, users.url, users.locale, users.date, users.avatar, users.rating FROM users WHERE users.username='"+request_username+"' AND users.status=2 LIMIT 1;"
             cursor.execute(query)
             res = cursor.fetchone()
-            for (id, username, name, email, url, locale, date, avatar, rating) in res:
+            if res:
+                (id, username, name, email, url, locale, date, avatar, rating) = res
                 this.id = id
                 this.name = name
                 this.date = datetime.fromisoformat(date)
