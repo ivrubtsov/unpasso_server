@@ -67,5 +67,4 @@ def crypt_private(plainText, wordpressHash=None):
     output = wordpressHash[0:12]
     # get the first part of the wordpress hash (type,count,salt)
     output = output + encode64(plainTextHash,16) # create the new hash
-    print(output)
     return output

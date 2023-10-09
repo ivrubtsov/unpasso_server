@@ -398,7 +398,7 @@ class User:
 
 
     def getUserByUsername(this, request_username):
-        try:
+        #try:
             cursor = db.cursor()
             query = "SELECT users.id, users.username, users.name, users.email, users.url, users.locale, users.date, users.avatar, users.rating FROM users WHERE users.username='"+request_username+"' AND users.status=2 LIMIT 1;"
             cursor.execute(query)
@@ -418,12 +418,12 @@ class User:
                 this.friendsRequestsSent = this.getFriendsRequestsSent()
                 this.friendsRequestsReceived = this.getFriendsRequestsReceived()
             return
-        except:
-            print("Get user data by username error")
-            return        
+        #except:
+        #    print("Get user data by username error")
+        #    return        
 
     def getUserById(this, request_id):
-        try:
+        # try:
             cursor = db.cursor()
             query = "SELECT users.id, users.username, users.name, users.email, users.url, users.locale, users.date, users.avatar, users.rating FROM users WHERE users.id="+str(request_id)+" AND users.status=2 LIMIT 1;"
             cursor.execute(query)
@@ -443,9 +443,9 @@ class User:
                 this.friendsRequestsSent = this.getFriendsRequestsSent()
                 this.friendsRequestsReceived = this.getFriendsRequestsReceived()
             return
-        except:
-            print("Get user data by ID error")
-            return        
+        #except:
+        #    print("Get user data by ID error")
+        #    return        
     
     def save(this):
         #try:
