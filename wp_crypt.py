@@ -16,18 +16,18 @@ def encode64(textInput,count):
     while i < count:
         i = i + 1
         print('i='+str(i))
-        print('textInput[i-1]='+textInput[i-1])
-        value = ord(textInput[i-1])
+        print('textInput[i-1]='+str(textInput)[i-1])
+        value = ord(str(textInput)[i-1])
         output = output + itoa64[value & 63]
         if i < count :
             print('textInput[i]='+textInput[i])
-            value = value | ord(textInput[i]) << 8
+            value = value | ord(str(textInput)[i]) << 8
         output = output + itoa64[(value >> 6) & 63]
         i = i + 1
         if i >= count:
             break
         if i < count:
-            value = value | ord(textInput[i]) <<16
+            value = value | ord(str(textInput)[i]) <<16
             output = output + itoa64[(value >> 12) & 63]
             i = i + 1
         if i >= count:
