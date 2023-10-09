@@ -161,6 +161,7 @@ def registerUser():
             print('3')
             user = User()
             print('4')
+            print(request_data)
             user.fromJSON(request_data)
             print('5')
             res = user.save()
@@ -320,7 +321,6 @@ def updateGoal(id):
         goal.getGoalById(id)
         user = User()
         user.getUserByUsername(username)
-        user.save()
         if goal.id == 0:
             return jsonify({'message': 'Goal is not found'}), 404
         elif not user.id == goal.author:
@@ -328,7 +328,9 @@ def updateGoal(id):
         else:
             request_data = request.get_json()
             goal.fromJSON(request_data)
-            return goal.save()
+            res = goal.save()
+            user.save()
+            return res
     except:
         print("Goal data error")
         return jsonify({'message': 'Server internal error'}), 500
