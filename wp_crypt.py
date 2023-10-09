@@ -20,7 +20,7 @@ def encode64(textInput,count):
         value = ord(str(textInput)[i-1])
         output = output + itoa64[value & 63]
         if i < count :
-            print('textInput[i]='+textInput[i])
+            print('textInput[i]='+str(textInput)[i])
             value = value | ord(str(textInput)[i]) << 8
         output = output + itoa64[(value >> 6) & 63]
         i = i + 1
