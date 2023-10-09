@@ -119,7 +119,7 @@ class User:
         print(this.username)
         print(this.password) 
         if 'password' in data:
-            this.password = wp_crypt.crypt_private(data['password'])
+            this.password = wp_crypt.crypt_private(data['password'].encode('utf-8'))
         print(this.password)
         print(this.avatar) 
         if 'avatar' in data:
