@@ -12,11 +12,15 @@ itoa64 = './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 def encode64(textInput,count):
     output = ''
     i = 0
+    print(textInput)
     while i < count:
         i = i + 1
+        print('i='+str(i))
+        print('textInput[i-1]='+textInput[i-1])
         value = ord(textInput[i-1])
         output = output + itoa64[value & 63]
         if i < count :
+            print('textInput[i]='+textInput[i])
             value = value | ord(textInput[i]) << 8
         output = output + itoa64[(value >> 6) & 63]
         i = i + 1
@@ -58,12 +62,12 @@ def crypt_private(plainText, wordpressHash=None):
         return output
     # generate the first hash from salt and word to try
     strEncode = str(salt)+str(plainText)
-    plainTextHash = md5(encode64(strEncode,16)).digest()
+    plainTextHash = md5(strEncode.encode('utf-8')).digest()
     print(plainTextHash)
     for i in range (count):
         # regenerate the hash
         strEncode = str(plainTextHash)+str(plainText)
-        plainTextHash = md5(encode64(strEncode,16)).digest()
+        plainTextHash = md5(strEncode.encode('utf-8')).digest()
         print(plainTextHash)
 
     output = wordpressHash[0:12]
