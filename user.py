@@ -474,6 +474,7 @@ class User:
             query = "SELECT users.id FROM users WHERE users.username='"+this.username+"' AND users.status=2 AND NOT users.id="+str(this.id)+" LIMIT 1;"
             cursor.execute(query)
             if cursor.rowcount>0:
+                print('user exists')
                 res = {
                     "code": "existing_user_login",
                     "message": "Sorry, that username already exists!",
@@ -485,6 +486,7 @@ class User:
             query = "SELECT users.id FROM users WHERE users.email='"+this.email+"' AND users.status=2 AND NOT users.id="+str(this.id)+" LIMIT 1;"
             cursor.execute(query)
             if cursor.rowcount>0:
+                print('email exists')
                 res = {
                     "code": "existing_user_email",
                     "message": "Sorry, that email address is already used!",
@@ -504,6 +506,7 @@ class User:
                 cursor.execute(query)
                 this.setAchievements()
             db.commit()
+            print('user save successful')
             return jsonify(this.toJSON()), 200
         #except:
         #    print("User save error")
