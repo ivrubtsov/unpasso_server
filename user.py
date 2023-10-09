@@ -122,10 +122,12 @@ class User:
             this.password = wp_crypt.crypt_private(data['password'])
         print(this.password)
         print(this.avatar) 
+        if 'description' in data:
+            description = data['description']
         if 'avatar' in data:
             this.avatar = data['avatar']
-        elif 'description' in data and 'avatar' in data['description']:
-            this.avatar = data['description']['avatar']
+        elif 'description' in data and 'avatar' in description:
+            this.avatar = description['avatar']
         print(this.avatar)
         print('12')
         
@@ -137,14 +139,14 @@ class User:
             this.locale = data['locale']
         if 'rating' in data:
             this.rating = data['rating']
-        elif 'description' in data and 'rating' in data['description']:
-            this.rating = data['description']['rating']
+        elif 'description' in data and 'rating' in description:
+            this.rating = description['rating']
         if 'status' in data:
             this.status = data['status']
         if 'achievements' in data:
             this.achievements = data['achievements']
-        elif 'description' in data and 'achievements' in data['description']:
-            this.achievements = data['description']['achievements']
+        elif 'description' in data and 'achievements' in description:
+            this.achievements = description['achievements']
         print('13')
         return
 
