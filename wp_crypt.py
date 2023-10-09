@@ -57,10 +57,12 @@ def crypt_private(plainText, wordpressHash=None):
     if len(salt) != 8:
         return output
     # generate the first hash from salt and word to try
-    plainTextHash = md5(str(salt)+str(plainText)).digest()
+    strEncode = str(salt)+str(plainText)
+    plainTextHash = md5(encode64(strEncode)).digest()
     for i in range (count):
         # regenerate the hash
-        plainTextHash = md5(str(plainTextHash)+str(plainText)).digest()
+        strEncode = str(plainTextHash)+str(plainText)
+        plainTextHash = md5(encode64(strEncode)).digest()
 
     output = wordpressHash[0:12]
     # get the first part of the wordpress hash (type,count,salt)
