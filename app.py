@@ -137,16 +137,16 @@ def authUser():
     if (not username or username==''):
         print("Username is null")
         return jsonify({'message': 'Username is null'}), 400
-    try:
-        user = User()
-        user.getUserByUsername(username)
-        if user.id == 0:
-            return jsonify({'message': 'User is not found'}), 404
-        else:
-            return jsonify(user.toJSON()), 200
-    except:
-        print("User auth error")
-        return jsonify({'message': 'Server internal error'}), 500
+    #try:
+    user = User()
+    user.getUserByUsername(username)
+    if user.id == 0:
+        return jsonify({'message': 'User is not found'}), 404
+    else:
+        return jsonify(user.toJSON()), 200
+    #except:
+    #    print("User auth error")
+    #    return jsonify({'message': 'Server internal error'}), 500
 
 # Register a new user
 @app.route(BASE_URL+'/users', methods=['GET', 'POST'], endpoint='registerUser')
