@@ -448,7 +448,7 @@ class User:
             return        
     
     def save(this):
-        try:
+        #try:
             #Check email format
             if not checkEmail(this.email):
                 res = {
@@ -505,14 +505,14 @@ class User:
                 this.setAchievements()
             db.commit()
             return jsonify(this.toJSON()), 200
-        except:
-            print("User save error")
-            res = {
-                "code": "user_save_error",
-                "message": "Unknown error. Please, try again later",
-                "data": ''
-            }
-            return jsonify(res), 500
+        #except:
+        #    print("User save error")
+        #    res = {
+        #        "code": "user_save_error",
+        #        "message": "Unknown error. Please, try again later",
+        #        "data": ''
+        #    }
+        #    return jsonify(res), 500
 
     def delete(this):
         try:
