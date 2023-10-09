@@ -82,10 +82,10 @@ class Goal:
         this.isprivate = isprivate
         this.likes = likes
         this.likeUsers = likeUsers
-    def fromJSON(this, jsonData):
-        if not jsonData:
+    def fromJSON(this, data):
+        if not data:
             return
-        data = json.loads(jsonData)
+        # data = json.loads(data)
         if 'id' in data:
             this.id = data['id']
             this.link = SITE_URL+'/?p='+str(this.id)

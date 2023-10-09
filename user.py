@@ -95,11 +95,11 @@ class User:
         this.friends = friends
         this.friendsRequestsReceived = friendsRequestsReceived
         this.friendsRequestsSent = friendsRequestsSent
-    def fromJSON(this, jsonData):
-        if not jsonData:
+    def fromJSON(this, data):
+        if not data:
             return
         print('11')
-        data = json.loads(jsonData)
+        # data = json.loads(data)
         print('12')
         print(this.id)
         if 'id' in data:
