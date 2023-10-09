@@ -59,8 +59,7 @@ def login_service(f):
     return decorated_function
 
 # Server responce if a user didn't request anything
-@app.route("/", methods=["GET"], endpoint='hello')
-@login_service
+@app.route("/hello", methods=["GET"], endpoint='hello')
 def hello():
     return "Hello World!"
 
