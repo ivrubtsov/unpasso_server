@@ -468,7 +468,7 @@ class User:
                         }
                     }
                 }
-                return jsonify(res), 400
+                return res, 400
             # Check username
             cursor = db.cursor()
             query = "SELECT users.id FROM users WHERE users.username='"+this.username+"' AND users.status=2 AND NOT users.id="+str(this.id)+" LIMIT 1;"
@@ -480,7 +480,7 @@ class User:
                     'message': 'Sorry, that username already exists!',
                     'data': '',
                 }
-                return jsonify(res), 400
+                return res, 400
             # Check email exists
 
             query = "SELECT users.id FROM users WHERE users.email='"+this.email+"' AND users.status=2 AND NOT users.id="+str(this.id)+" LIMIT 1;"
@@ -492,7 +492,7 @@ class User:
                     'message': 'Sorry, that email address is already used!',
                     'data': '',
                 }
-                return jsonify(res), 400
+                return res, 400
             this.url = SITE_URL+"/author/"+this.username
             if this.id == 0:
                 this.date = datetime.now()
