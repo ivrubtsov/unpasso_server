@@ -478,7 +478,19 @@ class User:
                 res = {
                     "code": "existing_user_login",
                     "message": "Sorry, that username already exists!",
-                    "data": ''
+                    "data": {
+                        "status": 400,
+                        "params": {
+                            "username": "Sorry, that username already exists!"
+                        },
+                        "details": {
+                            "username": {
+                                "code": "existing_user_login",
+                                "message": "Sorry, that username already exists!",
+                                "data": ''
+                            }
+                        }
+                    }
                 }
                 return jsonify(res), 400
             # Check email exists
@@ -490,7 +502,19 @@ class User:
                 res = {
                     "code": "existing_user_email",
                     "message": "Sorry, that email address is already used!",
-                    "data": ''
+                    "data": {
+                        "status": 400,
+                        "params": {
+                            "email": "Sorry, that email address is already used!"
+                        },
+                        "details": {
+                            "email": {
+                                "code": "existing_user_email",
+                                "message": "Sorry, that email address is already used!",
+                                "data": ''
+                            }
+                        }
+                    }
                 }
                 return jsonify(res), 400
             this.url = SITE_URL+"/author/"+this.username
