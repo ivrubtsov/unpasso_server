@@ -223,25 +223,25 @@ def updateUser(id):
     if (not id or id=='' or id==0):
         print("User ID is null")
         return jsonify({'message': 'User ID is null'}), 400
-    try:
-        user = User()
-        user.getUserById(id)
-        if user.id == 0:
-            return jsonify({'message': 'User does not exist.'}), 404
-        elif not user.username == request.authorization.username:
-            return jsonify({'message': 'Unable to update data of other users'}), 403
+    #try:
+    user = User()
+    user.getUserById(id)
+    if user.id == 0:
+        return jsonify({'message': 'User does not exist.'}), 404
+    elif not user.username == request.authorization.username:
+        return jsonify({'message': 'Unable to update data of other users'}), 403
+    else:
+        if request.method == 'POST':
+            request_data = request.get_json()
+            user.fromJSON(request_data)
+            res = user.save()
+            return res
         else:
-            if request.method == 'POST':
-                request_data = request.get_json()
-                user.fromJSON(request_data)
-                res = user.save()
-                return res
-            else:
-                print("Incorrect request")
-                return jsonify({'message': 'Incorrect request'}), 400
-    except:
-        print("User data error")
-        return jsonify({'message': 'Server internal error'}), 500
+            print("Incorrect request")
+            return jsonify({'message': 'Incorrect request'}), 400
+    #except:
+    #    print("User data error")
+    #    return jsonify({'message': 'Server internal error'}), 500
 
 # Create a goal
 @app.route(BASE_URL+'/posts', methods=['POST'], endpoint='createGoal')
