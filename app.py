@@ -197,7 +197,7 @@ def deleteUser(id):
 
 # Get a user data
 @app.route(BASE_URL+'/users/<int:id>', methods=['GET'], endpoint='getUser')
-@login_service
+@login
 def getUser(id):
     if (not id or id=='' or id==0):
         print("User ID is null")

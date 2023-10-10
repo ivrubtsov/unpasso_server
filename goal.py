@@ -328,6 +328,7 @@ def getPersonalUserGoals(user_id, page, per_page):
                 )
                 goal.getLikes()
                 goals.append(goal.toJSON())
+        print(goals)
         return jsonify(goals), 200
     #except:
     #    print("Get user's goals error")
