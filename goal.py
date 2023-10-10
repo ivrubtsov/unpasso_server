@@ -220,7 +220,8 @@ class Goal:
             query = "SELECT posts.id, posts.author, posts.date, posts.title, posts.link, posts.status, posts.iscompleted, posts.ispublic, posts.isfriends, posts.isprivate FROM posts WHERE posts.id="+str(request_id)+" AND posts.status=1 ORDER BY posts.date DESC LIMIT 1;"
             cursor.execute(query)
             res = cursor.fetchone()
-            for (id, author, date, title, link, status, iscompleted, ispublic, isfriends, isprivate) in res:
+            if cursor.rowcount>0:
+                (id, author, date, title, link, status, iscompleted, ispublic, isfriends, isprivate) = res
                 this.id = id
                 this.author = author
                 #this.date = datetime.fromisoformat(date)
