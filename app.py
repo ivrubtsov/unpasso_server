@@ -4,7 +4,7 @@ from functools import wraps
 import os
 from dotenv import load_dotenv
 from user import User, check_auth, check_auth_service, getPublicUserById, findUsers
-from goal import Goal, getUserGoals, getAvailableGoals
+from goal import Goal, getPersonalUserGoals, getAvailableGoals
 
 load_dotenv(".env")
 DB_SERVER = os.getenv('DB_SERVER')
@@ -293,7 +293,7 @@ def getUserGoals():
             print("Wrong request to get other user's goals")
             return jsonify({'message': 'Unable to update data of other users'}), 403
         else:
-            return getUserGoals(author, page, per_page)
+            return getPersonalUserGoals(author, page, per_page)
     else:
         user.getUserByUsername(username)
         return getAvailableGoals(user.id, page, per_page)

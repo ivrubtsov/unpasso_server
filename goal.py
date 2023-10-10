@@ -290,7 +290,7 @@ class Goal:
             }
             return jsonify(res), 500
 
-def getUserGoals(user_id, page, per_page):
+def getPersonalUserGoals(user_id, page, per_page):
     #try:
         if page:
             page = int(page)
