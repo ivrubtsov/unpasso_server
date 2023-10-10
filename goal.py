@@ -166,7 +166,7 @@ class Goal:
     def getLikes(this):
         try:
             cursor = db.cursor()
-            query = "SELECT id_user FROM likes WHERE id_post="+this.id+";"
+            query = "SELECT id_user FROM likes WHERE id_post="+str(this.id)+";"
             cursor.execute(query)
             res = cursor.fetchall()
             likes = []
