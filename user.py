@@ -101,6 +101,7 @@ class User:
         print('11')
         # data = json.loads(data)
         print('12')
+        print(data)
         print(this.id)
         if 'id' in data:
             this.id = data['id']
@@ -109,10 +110,10 @@ class User:
         if 'name' in data:
             this.name = data['name']
         print(this.name)
-        print(this.name)        
+        print(this.date)        
         if 'date' in data:
             this.date = datetime.fromisoformat(data['date'])
-        print(this.name)
+        print(this.date)
         print(this.username) 
         if 'username' in data:
             this.username = data['username']
@@ -124,6 +125,7 @@ class User:
         print(this.avatar) 
         if 'description' in data:
             description = data['description']
+            print(description)
         if 'avatar' in data:
             this.avatar = data['avatar']
         elif 'description' in data and 'avatar' in description:
