@@ -218,7 +218,8 @@ class Goal:
             for (id, author, date, title, link, status, iscompleted, ispublic, isfriends, isprivate) in res:
                 this.id = id
                 this.author = author
-                this.date = datetime.fromisoformat(date)
+                #this.date = datetime.fromisoformat(date)
+                this.date = date
                 this.title = title
                 this.link = link
                 this.status = status
@@ -253,7 +254,7 @@ class Goal:
             cursor = db.cursor()
             if this.id == 0:
                 # this.date = datetime.now()
-                query = "INSERT INTO posts (author, date, title, link, status, iscompleted, ispublic, isfriends, isprivate) VALUES ("+str(this.author)+", '"+this.date.isoformat(" ", "seconds")+"', "+DB_STRING+this.title+DB_STRING+", '', "+this.status+", "+iscompleted+", "+ispublic+", "+isfriends+", "+isprivate+") RETURNING id;"
+                query = "INSERT INTO posts (author, date, title, link, status, iscompleted, ispublic, isfriends, isprivate) VALUES ("+str(this.author)+", '"+this.date.isoformat(" ", "seconds")+"', "+DB_STRING+this.title+DB_STRING+", '', "+str(this.status)+", "+iscompleted+", "+ispublic+", "+isfriends+", "+isprivate+") RETURNING id;"
                 cursor.execute(query)
                 this.id = cursor.fetchone()[0]
                 this.link = SITE_URL+'/?p='+str(this.id)
@@ -308,14 +309,15 @@ def getPersonalUserGoals(user_id, page, per_page):
         offset = per_page * (page - 1)
         query = "SELECT posts.id, posts.author, posts.date, posts.title, posts.link, posts.status, posts.iscompleted, posts.ispublic, posts.isfriends, posts.isprivate FROM posts WHERE posts.author="+str(user_id)+" AND posts.status=1 ORDER BY posts.date DESC LIMIT "+str(per_page)+" OFFSET "+str(offset)+";"
         cursor.execute(query)
-        res = cursor.fetchone()
+        res = cursor.fetchall()
         goals = []
         if cursor.rowcount>0:
             for (id, author, date, title, link, status, iscompleted, ispublic, isfriends, isprivate) in res:
                 goal = Goal(
                     id,
                     author,
-                    datetime.fromisoformat(date),
+                    #datetime.fromisoformat(date),
+                    date,
                     title,
                     link,
                     status,
@@ -354,23 +356,25 @@ def getAvailableGoals(user_id, page, per_page):
         cursor = db.cursor()
         query = "SELECT posts.id, posts.author, posts.date, posts.title, posts.link, posts.status, posts.iscompleted, posts.ispublic, posts.isfriends, posts.isprivate FROM posts, friends WHERE ((posts.ispublic=TRUE OR (posts.author=friends.id_user AND friends.id_friend="+str(user_id)+" AND posts.isfriends=TRUE)) AND posts.status=1) ORDER BY posts.date DESC LIMIT "+str(per_page)+" OFFSET "+str(offset)+";"
         cursor.execute(query)
-        res = cursor.fetchone()
+        res = cursor.fetchall()
         goals = []
-        for (id, author, date, title, link, status, iscompleted, ispublic, isfriends, isprivate) in res:
-            goal = Goal(
-                id,
-                author,
-                datetime.fromisoformat(date),
-                title,
-                link,
-                status,
-                iscompleted,
-                ispublic,
-                isfriends,
-                isprivate,
-            )
-            goal.getLikes()
-            goals.append(goal.toJSON())
+        if cursor.rowcount>0:
+            for (id, author, date, title, link, status, iscompleted, ispublic, isfriends, isprivate) in res:
+                goal = Goal(
+                    id,
+                    author,
+                    #datetime.fromisoformat(date),
+                    date,
+                    title,
+                    link,
+                    status,
+                    iscompleted,
+                    ispublic,
+                    isfriends,
+                    isprivate,
+                )
+                goal.getLikes()
+                goals.append(goal.toJSON())
         return jsonify(goals), 200
     except:
         print("Get available goals error")
