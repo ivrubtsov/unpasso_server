@@ -157,7 +157,7 @@ class Goal:
         return {
             'id': this.id,
             'title': {'rendered': this.title},
-            'date': this.date.isoformat,
+            'date': this.date.isoformat("T", "seconds"),
             'author': this.author,
             'tags': tags,
             'content': {'rendered': description},
