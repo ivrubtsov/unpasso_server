@@ -141,6 +141,8 @@ class Goal:
             tags.append(27)
         if this.isprivate:
             tags.append(28)
+        
+        this.date = this.date.replace(tzinfo=None)
 
         user = User()
         user.getUserById(this.author)
