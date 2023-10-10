@@ -203,7 +203,7 @@ class User:
             if not this.id or this.id == 0:
                 return []
             cursor = db.cursor()
-            query = "SELECT id_achievement FROM achievements WHERE id_user="+this.id+";"
+            query = "SELECT id_achievement FROM achievements WHERE id_user="+str(this.id)+";"
             cursor.execute(query)
             res = cursor.fetchall()
             achs = []
@@ -239,7 +239,7 @@ class User:
     def getFriends(this):
         try:
             cursor = db.cursor()
-            query = "SELECT friends.id_friend, users.username, users.name, users.avatar, users.rating FROM friends, users WHERE friends.id_user="+this.id+" AND friends.id_friend=users.id AND users.status=2;"
+            query = "SELECT friends.id_friend, users.username, users.name, users.avatar, users.rating FROM friends, users WHERE friends.id_user="+str(this.id)+" AND friends.id_friend=users.id AND users.status=2;"
             cursor.execute(query)
             res = cursor.fetchall()
             friends = []
@@ -260,7 +260,7 @@ class User:
     def getFriendsRequestsSent(this):
         try:
             cursor = db.cursor()
-            query = "SELECT friends_requests.id, friends_requests.id_status, users.id, users.username, users.name, users.avatar, users.rating FROM friends_requests, users WHERE friends_requests.id_source="+this.id+" AND friends_requests.id_target=users.id AND users.status=2 AND friends_requests.id_status=1 ORDER BY friends_requests DESC;"
+            query = "SELECT friends_requests.id, friends_requests.id_status, users.id, users.username, users.name, users.avatar, users.rating FROM friends_requests, users WHERE friends_requests.id_source="+str(this.id)+" AND friends_requests.id_target=users.id AND users.status=2 AND friends_requests.id_status=1 ORDER BY friends_requests DESC;"
             cursor.execute(query)
             res = cursor.fetchall()
             friendsRequestsSent = []
@@ -283,7 +283,7 @@ class User:
     def getFriendsRequestsReceived(this):
         try:
             cursor = db.cursor()
-            query = "SELECT friends_requests.id, friends_requests.id_status, users.id, users.username, users.name, users.avatar, users.rating FROM friends_requests, users WHERE friends_requests.id_target="+this.id+" AND friends_requests.id_source=users.id AND users.status=2 AND friends_requests.id_status=1 ORDER BY friends_requests DESC;"
+            query = "SELECT friends_requests.id, friends_requests.id_status, users.id, users.username, users.name, users.avatar, users.rating FROM friends_requests, users WHERE friends_requests.id_target="+str(this.id)+" AND friends_requests.id_source=users.id AND users.status=2 AND friends_requests.id_status=1 ORDER BY friends_requests DESC;"
             cursor.execute(query)
             res = cursor.fetchall()
             friendsRequestsReceived = []
