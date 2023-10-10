@@ -247,7 +247,7 @@ def updateUser(id):
 @app.route(BASE_URL+'/posts', methods=['POST'], endpoint='createGoal')
 @login
 def createGoal():
-    try:
+    #try:
         if request.method == 'POST':
             request_data = request.get_json()
             goal = Goal()
@@ -260,9 +260,9 @@ def createGoal():
         else:
             print("Incorrect request")
             return jsonify({'message': 'Incorrect request'}), 400
-    except:
-        print("Goal save error")
-        return jsonify({'message': 'Server internal error'}), 500
+    #except:
+    #    print("Goal save error")
+    #    return jsonify({'message': 'Server internal error'}), 500
 
 # Get user's goals - personal and available
 @app.route(BASE_URL+'/posts', methods=['GET'], endpoint='getUserGoals')

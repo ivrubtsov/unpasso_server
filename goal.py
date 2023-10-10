@@ -233,7 +233,7 @@ class Goal:
             return        
     
     def save(this):
-        try:
+        #try:
             if this.iscompleted:
                 iscompleted = "TRUE"
             else:
@@ -264,14 +264,14 @@ class Goal:
                 cursor.execute(query)
             db.commit()
             return jsonify(this.toJSON()), 200
-        except:
-            print("Post save error")
-            res = {
-                "code": "post_save_error",
-                "message": "Unknown error. Please, try again later",
-                "data": ''
-            }
-            return jsonify(res), 500
+        #except:
+        #    print("Post save error")
+        #    res = {
+        #        "code": "post_save_error",
+        #        "message": "Unknown error. Please, try again later",
+        #        "data": ''
+        #    }
+        #    return jsonify(res), 500
 
     def delete(this):
         try:

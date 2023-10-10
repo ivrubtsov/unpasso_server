@@ -408,7 +408,6 @@ class User:
             cursor.execute(query)
             res = cursor.fetchone()
             if res:
-                print(res)
                 (id, username, name, email, url, locale, date, avatar, rating) = res
                 this.id = id
                 this.name = name
