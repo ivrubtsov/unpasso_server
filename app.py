@@ -276,30 +276,30 @@ def getUserGoals():
     if (not username or username==''):
         print("Username is null")
         return jsonify({'message': 'Username is null'}), 400
-    try:
-        if 'page' in request.args:
-            page = request.args.get('page')
+    #try:
+    if 'page' in request.args:
+        page = request.args.get('page')
+    else:
+        page = 1
+    if 'per_page' in request.args:
+        per_page = request.args.get('per_page')
+    else:
+        per_page = 100
+    user = User()
+    if 'author' in request.args:
+        author = request.args.get('author')
+        user.getUserById(author)
+        if not user.username == username:
+            print("Wrong request to get other user's goals")
+            return jsonify({'message': 'Unable to update data of other users'}), 403
         else:
-            page = 1
-        if 'per_page' in request.args:
-            per_page = request.args.get('per_page')
-        else:
-            per_page = 100
-        user = User()
-        if 'author' in request.args:
-            author = request.args.get('author')
-            user.getUserById(author)
-            if not user.username == username:
-                print("Wrong request to get other user's goals")
-                return jsonify({'message': 'Unable to update data of other users'}), 403
-            else:
-                return getUserGoals(author, page, per_page)
-        else:
-            user.getUserByUsername(username)
-            return getAvailableGoals(user.id, page, per_page)
-    except:
-        print("Get user's goals error")
-        return jsonify({'message': 'Server internal error'}), 500
+            return getUserGoals(author, page, per_page)
+    else:
+        user.getUserByUsername(username)
+        return getAvailableGoals(user.id, page, per_page)
+    #except:
+    #    print("Get user's goals error")
+    #    return jsonify({'message': 'Server internal error'}), 500
 
 # Complete or update the goal
 @app.route(BASE_URL+'/posts/<int:id>', methods=['POST'], endpoint='updateGoal')
