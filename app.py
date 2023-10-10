@@ -41,9 +41,9 @@ def login(f):
     def decorated_function(*args, **kwargs):
         auth = request.authorization
         if not auth:
-            return jsonify({'message': 'Authentication required'}), 401
+            return jsonify({'error_description': 'Authentication required'}), 401
         if not check_auth(auth.username, auth.password):
-            return jsonify({'message': 'Incorrect password.'}), 403
+            return jsonify({'error_description': 'Incorrect password.'}), 403
         return f(*args, **kwargs)
     return decorated_function
 
@@ -52,9 +52,9 @@ def login_service(f):
     def decorated_function(*args, **kwargs):
         auth = request.authorization
         if not auth:
-            return jsonify({'message': 'Authentication required'}), 401
+            return jsonify({'error_description': 'Authentication required'}), 401
         if not check_auth_service(auth.username, auth.password):
-            return jsonify({'message': 'Incorrect password.'}), 403
+            return jsonify({'error_description': 'Incorrect password.'}), 403
         return f(*args, **kwargs)
     return decorated_function
 
@@ -141,7 +141,7 @@ def authUser():
     user = User()
     user.getUserByUsername(username)
     if user.id == 0:
-        return jsonify({'message': 'User is not found'}), 404
+        return jsonify({'message': 'User does not exist.'}), 404
     else:
         return jsonify(user.toJSON()), 200
     #except:
@@ -185,7 +185,7 @@ def deleteUser(id):
         user = User()
         user.getUserById(id)
         if user.id == 0:
-            return jsonify({'message': 'User is not found'}), 404
+            return jsonify({'message': 'User does not exist.'}), 404
 #        elif not user.username == request.authorization.username:
 #            return jsonify({'message': 'Unable to access data of other users'}), 403
         else:
@@ -206,7 +206,7 @@ def getUser(id):
         user = User()
         user.getUserById(id)
         if user.id == 0:
-            return jsonify({'message': 'User is not found'}), 404
+            return jsonify({'message': 'User does not exist.'}), 404
         elif not user.username == request.authorization.username:
             return jsonify(user.toPublicJSON()), 200
         else:
@@ -227,7 +227,7 @@ def updateUser(id):
         user = User()
         user.getUserById(id)
         if user.id == 0:
-            return jsonify({'message': 'User is not found'}), 404
+            return jsonify({'message': 'User does not exist.'}), 404
         elif not user.username == request.authorization.username:
             return jsonify({'message': 'Unable to update data of other users'}), 403
         else:
