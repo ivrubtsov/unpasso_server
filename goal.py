@@ -146,13 +146,16 @@ class Goal:
 
         user = User()
         user.getUserById(this.author)
+        friendsIds = []
+        for friend in user.friends:
+            friendsIds.append(friend['id'])
 
         description = {
             'authorName': user.name,
             'authorUserName': user.username,
             'authorAvatar': user.avatar,
             'authorRating': user.rating,
-            'friendsUsers': user.friends,
+            'friendsUsers': friendsIds,
             'likeUsers': this.likeUsers,
         }
     
