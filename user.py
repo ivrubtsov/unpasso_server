@@ -199,7 +199,7 @@ class User:
         }
 
     def getAchievements(this):
-        try:
+        #try:
             if not this.id or this.id == 0:
                 return []
             cursor = db.cursor()
@@ -211,9 +211,9 @@ class User:
                 for (id_achievement) in res:
                     achs.append(id_achievement)
             return achs
-        except:
-            print("Database get achievements request error")
-            return []
+        #except:
+        #    print("Database get achievements request error")
+        #    return []
 
     def setAchievements(this):
         try:
