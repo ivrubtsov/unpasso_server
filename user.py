@@ -404,15 +404,16 @@ class User:
     def getUserByUsername(this, request_username):
         #try:
             cursor = db.cursor()
-            query = "SELECT users.id, users.username, users.name, users.email, users.url, users.locale, users.date, users.avatar, users.rating FROM users WHERE users.username='"+request_username+"' AND users.status=2 LIMIT 1;"
+            query = "SELECT users.id, users.username, users.name, users.email, users.password, users.url, users.locale, users.date, users.avatar, users.rating FROM users WHERE users.username='"+request_username+"' AND users.status=2 LIMIT 1;"
             cursor.execute(query)
             res = cursor.fetchone()
             if res:
-                (id, username, name, email, url, locale, date, avatar, rating) = res
+                (id, username, name, email, password, url, locale, date, avatar, rating) = res
                 this.id = id
                 this.name = name
                 this.date = date
                 this.username = username
+                this.password = password
                 this.avatar = avatar
                 this.email = email
                 this.url = url
@@ -430,15 +431,16 @@ class User:
     def getUserById(this, request_id):
         # try:
             cursor = db.cursor()
-            query = "SELECT users.id, users.username, users.name, users.email, users.url, users.locale, users.date, users.avatar, users.rating FROM users WHERE users.id="+str(request_id)+" AND users.status=2 LIMIT 1;"
+            query = "SELECT users.id, users.username, users.name, users.email, users.password, users.url, users.locale, users.date, users.avatar, users.rating FROM users WHERE users.id="+str(request_id)+" AND users.status=2 LIMIT 1;"
             cursor.execute(query)
             res = cursor.fetchone()
             if res:
-                (id, username, name, email, url, locale, date, avatar, rating) = res
+                (id, username, name, email, password, url, locale, date, avatar, rating) = res
                 this.id = id
                 this.name = name
                 this.date = date
                 this.username = username
+                this.password = password
                 this.avatar = avatar
                 this.email = email
                 this.url = url
