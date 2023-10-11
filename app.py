@@ -211,7 +211,7 @@ def getUser(id):
             return jsonify(user.toPublicJSON()), 200
         else:
             print('user data:')
-            print(user)
+            print(jsonify(user))
             return jsonify(user.toJSON()), 200
     except:
         print("User data error")
