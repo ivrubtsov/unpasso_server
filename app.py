@@ -438,6 +438,26 @@ def getFriendsRequestsSent():
         print("Get user's friends sent error")
         return jsonify({'message': 'Server internal error'}), 500
 
+# Get user's friends and requests data
+@app.route(BASE_URL+'/friends/<int:id>', methods=['GET'], endpoint='getFriendsData')
+@login
+def getFriendsData(id):
+    if (not id or id=='' or id==0):
+        print("User ID is null")
+        return jsonify({'message': 'User ID is null'}), 400
+    try:
+        user = User()
+        user.getUserById(id)
+        if user.id == 0:
+            return jsonify({'message': 'User does not exist.'}), 404
+        elif not user.username == request.authorization.username:
+            return jsonify(user.toPublicJSON()), 200
+        else:
+            return jsonify(user.toFriendsJSON()), 200
+    except:
+        print("User data error")
+        return jsonify({'message': 'Server internal error'}), 500
+
 # Search for friends
 @app.route(BASE_URL+'/friends/search', methods=['GET'], endpoint='searchFriends')
 @login

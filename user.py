@@ -200,6 +200,24 @@ class User:
                 'link': SITE_URL+'/author/'+this.username,
         }
 
+    def toFriendsJSON(this):
+        return {
+                'id': this.id,
+                'name': this.name,
+                'username': this.username,
+                'date': this.date.isoformat("T", "seconds"),
+                'url': this.url,
+                'email': this.email,
+                'description': {
+                    'achievements': this.achievements,
+                    'avatar': this.avatar,
+                    'friends': this.friends,
+                    'friendsRequestsReceived': this.friendsRequestsReceived,
+                    'friendsRequestsSent': this.friendsRequestsSent,
+                    },
+                'link': SITE_URL+'/author/'+this.username,
+        }
+
     def getAchievements(this):
         #try:
             if not this.id or this.id == 0:
