@@ -350,7 +350,7 @@ class User:
             this.friendsRequestsReceived = this.getFriendsRequestsReceived()
             this.calculateRating()
             this.save()
-            return jsonify(this.toJSON()), 200
+            return jsonify(this.toFriendsJSON()), 200
     #    except:
     #        print("Database accept friends request error")
     #        res = {
@@ -370,7 +370,7 @@ class User:
             cursor.execute(query)
             db.commit()
             this.friendsRequestsReceived = this.getFriendsRequestsReceived()
-            return jsonify(this.toJSON()), 200
+            return jsonify(this.toFriendsJSON()), 200
     #    except:
     #        print("Database reject friend request error")
     #        res = {
@@ -396,7 +396,7 @@ class User:
             this.friendsRequestsSent = this.getFriendsRequestsSent()
             this.calculateRating()
             this.save()
-            return jsonify(this.toJSON()), 200
+            return jsonify(this.toFriendsJSON()), 200
     #    except:
     #        print("Database send friends request error")
     #        res = {
@@ -419,7 +419,7 @@ class User:
                     cursor.execute(query)
                     db.commit()
                     this.friends = this.getFriends()
-            return jsonify(this.toJSON()), 200
+            return jsonify(this.toFriendsJSON()), 200
     #    except:
     #        print("Database remove friend request error")
     #        res = {
