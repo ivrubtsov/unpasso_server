@@ -210,6 +210,8 @@ def getUser(id):
         elif not user.username == request.authorization.username:
             return jsonify(user.toPublicJSON()), 200
         else:
+            print('user data:')
+            print(user)
             return jsonify(user.toJSON()), 200
     except:
         print("User data error")

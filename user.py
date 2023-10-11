@@ -211,7 +211,9 @@ class User:
             achs = []
             if cursor.rowcount>0:
                 for (id_achievement) in res:
+                    print('achievement:'+str(id_achievement))
                     achs.append(id_achievement)
+            print(achs)
             return achs
         #except:
         #    print("Database get achievements request error")
