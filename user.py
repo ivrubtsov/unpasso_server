@@ -212,7 +212,7 @@ class User:
             if cursor.rowcount>0:
                 for (id_achievement) in res:
                     print('achievement:'+str(id_achievement))
-                    achs.append(id_achievement)
+                    achs.append(id_achievement[0])
             print(achs)
             return achs
         #except:
@@ -256,6 +256,7 @@ class User:
                         'avatar': avatar,
                         'rating': rating,
                     })
+            print('friends:',friends)
             return friends
         except:
             print("Database get friends error")
@@ -279,6 +280,7 @@ class User:
                         'avatar': avatar,
                         'rating': rating,
                     })
+            print('friendsRequestsSent:',friendsRequestsSent)
             return friendsRequestsSent
         except:
             print("Database get friends requests sent error")
@@ -302,6 +304,7 @@ class User:
                         'avatar': avatar,
                         'rating': rating,
                     })
+            print('friendsRequestsReceived:',friendsRequestsReceived)
             return friendsRequestsReceived
         except:
             print("Database get friends requests received error")
