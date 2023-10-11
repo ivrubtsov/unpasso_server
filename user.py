@@ -333,7 +333,7 @@ class User:
     def acceptFriendsRequest(this, friend_id):
     #    try:
             for friend in this.friends:
-                if friend.id == friend_id:
+                if friend['id'] == friend_id:
                     cursor = db.cursor()
                     query = "UPDATE friends_requests SET id_status=2 WHERE id_source="+str(friend_id)+" AND id_target="+str(this.id)+";"
                     cursor.execute(query)
@@ -363,7 +363,7 @@ class User:
     def rejectFriendsRequest(this, friend_id):
     #    try:
             for friend in this.friends:
-                if friend.id == friend_id:
+                if friend['id'] == friend_id:
                     this.removeFriend(friend_id)
             cursor = db.cursor()
             query = "UPDATE friends_requests SET id_status=3 WHERE id_source="+str(friend_id)+" AND id_target="+str(this.id)+";"
@@ -383,10 +383,10 @@ class User:
     def sendFriendsRequest(this, friend_id):
     #    try:
             for friendsRequest in this.friendsRequestsSent:
-                if friendsRequest.id == friend_id:
+                if friendsRequest['id'] == friend_id:
                     return jsonify(this.toJSON()), 200
             for friend in this.friends:
-                if friend.id == friend_id:
+                if friend['id'] == friend_id:
                     return jsonify(this.toJSON()), 200
             cursor = db.cursor()
             date = datetime.now()
