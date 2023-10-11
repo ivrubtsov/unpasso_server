@@ -331,7 +331,7 @@ class User:
             return []
 
     def acceptFriendsRequest(this, friend_id):
-        try:
+    #    try:
             for friend in this.friends:
                 if friend.id == friend_id:
                     cursor = db.cursor()
@@ -351,17 +351,17 @@ class User:
             this.calculateRating()
             this.save()
             return jsonify(this.toJSON()), 200
-        except:
-            print("Database accept friends request error")
-            res = {
-                "code": "friends_accept_error",
-                "message": "Unknown error. Please, try again later",
-                "data": ''
-            }
-            return jsonify(res), 500
+    #    except:
+    #        print("Database accept friends request error")
+    #        res = {
+    #            "code": "friends_accept_error",
+    #            "message": "Unknown error. Please, try again later",
+    #            "data": ''
+    #        }
+    #        return jsonify(res), 500
 
     def rejectFriendsRequest(this, friend_id):
-        try:
+    #    try:
             for friend in this.friends:
                 if friend.id == friend_id:
                     this.removeFriend(friend_id)
@@ -371,17 +371,17 @@ class User:
             db.commit()
             this.friendsRequestsReceived = this.getFriendsRequestsReceived()
             return jsonify(this.toJSON()), 200
-        except:
-            print("Database reject friend request error")
-            res = {
-                "code": "friends_reject_error",
-                "message": "Unknown error. Please, try again later",
-                "data": ''
-            }
-            return jsonify(res), 500
+    #    except:
+    #        print("Database reject friend request error")
+    #        res = {
+    #            "code": "friends_reject_error",
+    #            "message": "Unknown error. Please, try again later",
+    #            "data": ''
+    #        }
+    #        return jsonify(res), 500
 
     def sendFriendsRequest(this, friend_id):
-        try:
+    #    try:
             for friendsRequest in this.friendsRequestsSent:
                 if friendsRequest.id == friend_id:
                     return jsonify(this.toJSON()), 200
@@ -397,17 +397,17 @@ class User:
             this.calculateRating()
             this.save()
             return jsonify(this.toJSON()), 200
-        except:
-            print("Database send friends request error")
-            res = {
-                "code": "friends_send_error",
-                "message": "Unknown error. Please, try again later",
-                "data": ''
-            }
-            return jsonify(res), 500
+    #    except:
+    #        print("Database send friends request error")
+    #        res = {
+    #            "code": "friends_send_error",
+    #            "message": "Unknown error. Please, try again later",
+    #            "data": ''
+    #        }
+    #        return jsonify(res), 500
 
     def removeFriend(this, friend_id):
-        try:
+    #    try:
             for friend in this.friends:
                 if friend.id == friend_id:
                     cursor = db.cursor()
@@ -418,14 +418,14 @@ class User:
                     db.commit()
                     this.friends = this.getFriends()
             return jsonify(this.toJSON()), 200
-        except:
-            print("Database remove friend request error")
-            res = {
-                "code": "friends_remove_error",
-                "message": "Unknown error. Please, try again later",
-                "data": ''
-            }
-            return jsonify(res), 500
+    #    except:
+    #        print("Database remove friend request error")
+    #        res = {
+    #            "code": "friends_remove_error",
+    #            "message": "Unknown error. Please, try again later",
+    #            "data": ''
+    #        }
+    #        return jsonify(res), 500
 
 
     def getUserByUsername(this, request_username):

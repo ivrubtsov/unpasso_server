@@ -485,7 +485,7 @@ def searchFriends():
 @app.route(BASE_URL+'/friends/requests/<int:id>', methods=['POST'], endpoint='friendsRequest')
 @login
 def friendsRequest(id):
-    try:
+    #try:
         if request.method == 'POST':
             username = request.authorization.username
             if (not username or username==''):
@@ -517,9 +517,9 @@ def friendsRequest(id):
         else:
             print("Incorrect request")
             return jsonify({'message': 'Incorrect request'}), 400
-    except:
-        print("Goal save error")
-        return jsonify({'message': 'Server internal error'}), 500
+    #except:
+    #    print("Goal save error")
+    #    return jsonify({'message': 'Server internal error'}), 500
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=8000)
