@@ -411,7 +411,7 @@ class User:
             print(this.friends)
             for friend in this.friends:
                 print(friend)
-                if friend.id == friend_id:
+                if friend['id'] == friend_id:
                     cursor = db.cursor()
                     query = "DELETE FROM friends WHERE id_user="+str(friend_id)+" AND id_friend="+str(this.id)+";"
                     cursor.execute(query)
