@@ -253,8 +253,10 @@ class User:
                         'id': id,
                         'username': username,
                         'name': name,
-                        'avatar': avatar,
-                        'rating': rating,
+                        'description': {
+                            'avatar': avatar,
+                            'rating': rating,
+                        }
                     })
             print('friends:',friends)
             return friends
@@ -272,13 +274,13 @@ class User:
             if cursor.rowcount>0:
                 for (requestid, status, userid, username, name, avatar, rating) in res:
                     friendsRequestsSent.append({
-                        'requestId': requestid,
-                        'status': status,
                         'id': userid,
                         'username': username,
                         'name': name,
-                        'avatar': avatar,
-                        'rating': rating,
+                        'description': {
+                            'avatar': avatar,
+                            'rating': rating,
+                        }
                     })
             print('friendsRequestsSent:',friendsRequestsSent)
             return friendsRequestsSent
@@ -296,13 +298,13 @@ class User:
             if cursor.rowcount>0:
                 for (requestid, status, userid, username, name, avatar, rating) in res:
                     friendsRequestsReceived.append({
-                        'requestId': requestid,
-                        'status': status,
                         'id': userid,
                         'username': username,
                         'name': name,
-                        'avatar': avatar,
-                        'rating': rating,
+                        'description': {
+                            'avatar': avatar,
+                            'rating': rating,
+                        }
                     })
             print('friendsRequestsReceived:',friendsRequestsReceived)
             return friendsRequestsReceived
