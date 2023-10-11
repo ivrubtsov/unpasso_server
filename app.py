@@ -497,9 +497,8 @@ def friendsRequest(id):
             user = User()
             user.getUserByUsername(username)
             request_data = request.get_json()
-            data = json.loads(request_data)
-            if 'action' in data:
-                action = data['action']
+            if 'action' in request_data:
+                action = request_data['action']
                 if action == 'invite':
                     return user.sendFriendsRequest(id)
                 elif action == 'accept':
