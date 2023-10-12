@@ -247,7 +247,7 @@ def createGoal():
             res = goal.save()
             user = User()
             user.getUserById(goal.author)
-            user.save()
+            user.updateRating()
             return res
         else:
             print("Incorrect request")
@@ -321,7 +321,7 @@ def updateGoal(id):
             request_data = request.get_json()
             goal.fromJSON(request_data)
             res = goal.save()
-            user.save()
+            user.updateRating()
             return res
     except:
         print("Goal data error")

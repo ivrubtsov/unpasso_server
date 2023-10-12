@@ -253,6 +253,7 @@ class User:
                 query = query + ';'
                 cursor.execute(query)
             db.commit()
+            this.updateRating()
             return
         except:
             print("Database set achievements request error")
@@ -348,8 +349,7 @@ class User:
             db.commit()
             this.friends = this.getFriends()
             this.friendsRequestsReceived = this.getFriendsRequestsReceived()
-            this.calculateRating()
-            this.save()
+            this.updateRating()
             return jsonify(this.toFriendsJSON()), 200
         except:
             print("Database accept friends request error")
@@ -394,8 +394,7 @@ class User:
             cursor.execute(query)
             db.commit()
             this.friendsRequestsSent = this.getFriendsRequestsSent()
-            this.calculateRating()
-            this.save()
+            this.updateRating()
             return jsonify(this.toFriendsJSON()), 200
     #    except:
     #        print("Database send friends request error")
@@ -419,6 +418,7 @@ class User:
                     cursor.execute(query)
                     db.commit()
                     this.friends = this.getFriends()
+                    this.updateRating()
             return jsonify(this.toFriendsJSON()), 200
         except:
             print("Database remove friend request error")
@@ -590,6 +590,25 @@ class User:
             }
             return jsonify(res), 500
         
+    def updateRating(this):
+        try:
+            this.rating = this.calculateRating()
+            if this.id != 0:
+                cursor = db.cursor()
+                query = "UPDATE users SET rating="+str(this.rating)+" WHERE id="+str(this.id)+";"
+                cursor.execute(query)
+                db.commit()
+            print('user rating update successful')
+            return
+        except:
+            print("User rating update error")
+            res = {
+                "code": "user_rating_update_error",
+                "message": "Unknown error. Please, try again later",
+                "data": ''
+            }
+            return jsonify(res), 500
+
     def calculateRating(this):
         try:
             cursor = db.cursor()
