@@ -334,7 +334,6 @@ def getPersonalUserGoals(user_id, page, per_page):
                 )
                 goal.getLikes()
                 goals.append(goal.toJSON())
-        print(goals)
         return jsonify(goals), 200
     except:
         print("Get user's goals error")
@@ -361,7 +360,7 @@ def getAvailableGoals(user_id, page, per_page):
             per_page = DB_FETCH_LIMIT
         offset = per_page * (page - 1)
         cursor = db.cursor()
-        query = "SELECT posts.id, posts.author, posts.date, posts.title, posts.link, posts.status, posts.iscompleted, posts.ispublic, posts.isfriends, posts.isprivate FROM posts, friends WHERE ((posts.ispublic=TRUE OR (posts.author=friends.id_user AND friends.id_friend="+str(user_id)+" AND posts.isfriends=TRUE)) AND posts.status=1) ORDER BY posts.date DESC LIMIT "+str(per_page)+" OFFSET "+str(offset)+";"
+        query = "SELECT DISTINCT posts.id, posts.author, posts.date, posts.title, posts.link, posts.status, posts.iscompleted, posts.ispublic, posts.isfriends, posts.isprivate FROM posts, friends WHERE ((posts.ispublic=TRUE OR (posts.author=friends.id_user AND friends.id_friend="+str(user_id)+" AND posts.isfriends=TRUE)) AND posts.status=1 AND NOT posts.author="+str(user_id)+") ORDER BY posts.date DESC LIMIT "+str(per_page)+" OFFSET "+str(offset)+";"
         cursor.execute(query)
         res = cursor.fetchall()
         goals = []

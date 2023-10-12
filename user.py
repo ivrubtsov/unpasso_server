@@ -641,9 +641,7 @@ def check_auth(username, password):
     if cursor.rowcount>0:
         res = cursor.fetchall()
         for (db_id, db_username, db_password) in res:
-            print('db_password='+db_password)
             user_password = wp_crypt.crypt_private(password, db_password)
-            print('user_password='+user_password)
             if db_id and db_username and db_password == user_password:
                 auth = True
     return auth

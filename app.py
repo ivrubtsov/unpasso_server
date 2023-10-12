@@ -370,6 +370,58 @@ def getGoal(id):
 #
 #  static String removeFriend(int id) => '$_baseUrl/friends/$id?action=remove';
 
+# Like the goal
+@app.route(BASE_URL+'/posts/like/<int:id>', methods=['POST'], endpoint='likeGoal')
+@login
+def likeGoal(id):
+    try:
+        if request.method == 'POST':
+            username = request.authorization.username
+            if (not username or username==''):
+                print("Username is null")
+                return jsonify({'message': 'Username is null'}), 400
+            if (not id or id=='' or id==0):
+                print("Goal ID is null")
+                return jsonify({'message': 'Goal ID is null'}), 400
+            goal = Goal()
+            goal.getGoalById(id)
+            user = User()
+            user.getUserByUsername(username)
+            goal.addLike(user.id)
+            return jsonify(goal.toJSON()), 200
+        else:
+            print("Incorrect request")
+            return jsonify({'message': 'Incorrect request'}), 400
+    except:
+        print("Goal like error")
+        return jsonify({'message': 'Server internal error'}), 500
+
+# Unlike the goal
+@app.route(BASE_URL+'/posts/unlike/<int:id>', methods=['POST'], endpoint='unLikeGoal')
+@login
+def unLikeGoal(id):
+    try:
+        if request.method == 'POST':
+            username = request.authorization.username
+            if (not username or username==''):
+                print("Username is null")
+                return jsonify({'message': 'Username is null'}), 400
+            if (not id or id=='' or id==0):
+                print("Goal ID is null")
+                return jsonify({'message': 'Goal ID is null'}), 400
+            goal = Goal()
+            goal.getGoalById(id)
+            user = User()
+            user.getUserByUsername(username)
+            goal.removeLike(user.id)
+            return jsonify(goal.toJSON()), 200
+        else:
+            print("Incorrect request")
+            return jsonify({'message': 'Incorrect request'}), 400
+    except:
+        print("Goal unlike error")
+        return jsonify({'message': 'Server internal error'}), 500
+
 # Get user's friends
 @app.route(BASE_URL+'/friends', methods=['GET'], endpoint='getFriends')
 @login
