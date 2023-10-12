@@ -219,7 +219,7 @@ class User:
         }
 
     def getAchievements(this):
-        #try:
+        try:
             if not this.id or this.id == 0:
                 return []
             cursor = db.cursor()
@@ -233,9 +233,9 @@ class User:
                     achs.append(id_achievement[0])
             print(achs)
             return achs
-        #except:
-        #    print("Database get achievements request error")
-        #    return []
+        except:
+            print("Database get achievements request error")
+            return []
 
     def setAchievements(this):
         try:
@@ -331,7 +331,7 @@ class User:
             return []
 
     def acceptFriendsRequest(this, friend_id):
-    #    try:
+        try:
             for friend in this.friends:
                 if friend['id'] == friend_id:
                     cursor = db.cursor()
@@ -351,17 +351,17 @@ class User:
             this.calculateRating()
             this.save()
             return jsonify(this.toFriendsJSON()), 200
-    #    except:
-    #        print("Database accept friends request error")
-    #        res = {
-    #            "code": "friends_accept_error",
-    #            "message": "Unknown error. Please, try again later",
-    #            "data": ''
-    #        }
-    #        return jsonify(res), 500
+        except:
+            print("Database accept friends request error")
+            res = {
+                "code": "friends_accept_error",
+                "message": "Unknown error. Please, try again later",
+                "data": ''
+            }
+            return jsonify(res), 500
 
     def rejectFriendsRequest(this, friend_id):
-    #    try:
+        try:
             for friend in this.friends:
                 if friend['id'] == friend_id:
                     this.removeFriend(friend_id)
@@ -371,14 +371,14 @@ class User:
             db.commit()
             this.friendsRequestsReceived = this.getFriendsRequestsReceived()
             return jsonify(this.toFriendsJSON()), 200
-    #    except:
-    #        print("Database reject friend request error")
-    #        res = {
-    #            "code": "friends_reject_error",
-    #            "message": "Unknown error. Please, try again later",
-    #            "data": ''
-    #        }
-    #        return jsonify(res), 500
+        except:
+            print("Database reject friend request error")
+            res = {
+                "code": "friends_reject_error",
+                "message": "Unknown error. Please, try again later",
+                "data": ''
+            }
+            return jsonify(res), 500
 
     def sendFriendsRequest(this, friend_id):
     #    try:
@@ -407,7 +407,7 @@ class User:
     #        return jsonify(res), 500
 
     def removeFriend(this, friend_id):
-    #    try:
+        try:
             print(this.friends)
             for friend in this.friends:
                 print(friend)
@@ -420,18 +420,18 @@ class User:
                     db.commit()
                     this.friends = this.getFriends()
             return jsonify(this.toFriendsJSON()), 200
-    #    except:
-    #        print("Database remove friend request error")
-    #        res = {
-    #            "code": "friends_remove_error",
-    #            "message": "Unknown error. Please, try again later",
-    #            "data": ''
-    #        }
-    #        return jsonify(res), 500
+        except:
+            print("Database remove friend request error")
+            res = {
+                "code": "friends_remove_error",
+                "message": "Unknown error. Please, try again later",
+                "data": ''
+            }
+            return jsonify(res), 500
 
 
     def getUserByUsername(this, request_username):
-        #try:
+        try:
             cursor = db.cursor()
             query = "SELECT users.id, users.username, users.name, users.email, users.password, users.url, users.locale, users.date, users.avatar, users.rating FROM users WHERE users.username='"+request_username+"' AND users.status=2 LIMIT 1;"
             cursor.execute(query)
@@ -453,12 +453,12 @@ class User:
                 this.friendsRequestsSent = this.getFriendsRequestsSent()
                 this.friendsRequestsReceived = this.getFriendsRequestsReceived()
             return
-        #except:
-        #    print("Get user data by username error")
-        #    return        
+        except:
+            print("Get user data by username error")
+            return        
 
     def getUserById(this, request_id):
-        # try:
+        try:
             cursor = db.cursor()
             query = "SELECT users.id, users.username, users.name, users.email, users.password, users.url, users.locale, users.date, users.avatar, users.rating FROM users WHERE users.id="+str(request_id)+" AND users.status=2 LIMIT 1;"
             cursor.execute(query)
@@ -480,12 +480,12 @@ class User:
                 this.friendsRequestsSent = this.getFriendsRequestsSent()
                 this.friendsRequestsReceived = this.getFriendsRequestsReceived()
             return
-        #except:
-        #    print("Get user data by ID error")
-        #    return        
+        except:
+            print("Get user data by ID error")
+            return        
     
     def save(this):
-        #try:
+        try:
             #Check email format
             if not checkEmail(this.email):
                 res = {
@@ -545,14 +545,14 @@ class User:
             db.commit()
             print('user save successful')
             return jsonify(this.toJSON()), 200
-        #except:
-        #    print("User save error")
-        #    res = {
-        #        "code": "user_save_error",
-        #        "message": "Unknown error. Please, try again later",
-        #        "data": ''
-        #    }
-        #    return jsonify(res), 500
+        except:
+            print("User save error")
+            res = {
+                "code": "user_save_error",
+                "message": "Unknown error. Please, try again later",
+                "data": ''
+            }
+            return jsonify(res), 500
 
     def delete(this):
         try:

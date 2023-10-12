@@ -240,7 +240,7 @@ class Goal:
             return        
     
     def save(this):
-        #try:
+        try:
             if this.iscompleted:
                 iscompleted = "TRUE"
             else:
@@ -271,14 +271,14 @@ class Goal:
                 cursor.execute(query)
             db.commit()
             return jsonify(this.toJSON()), 200
-        #except:
-        #    print("Post save error")
-        #    res = {
-        #        "code": "post_save_error",
-        #        "message": "Unknown error. Please, try again later",
-        #        "data": ''
-        #    }
-        #    return jsonify(res), 500
+        except:
+            print("Post save error")
+            res = {
+                "code": "post_save_error",
+                "message": "Unknown error. Please, try again later",
+                "data": ''
+            }
+            return jsonify(res), 500
 
     def delete(this):
         try:
@@ -298,7 +298,7 @@ class Goal:
             return jsonify(res), 500
 
 def getPersonalUserGoals(user_id, page, per_page):
-    #try:
+    try:
         if page:
             page = int(page)
             if page < 1:
@@ -336,14 +336,14 @@ def getPersonalUserGoals(user_id, page, per_page):
                 goals.append(goal.toJSON())
         print(goals)
         return jsonify(goals), 200
-    #except:
-    #    print("Get user's goals error")
-    #    res = {
-    #        "code": "get_user_goals_error",
-    #        "message": "Unknown error. Please, try again later",
-    #        "data": ''
-    #    }
-    #    return jsonify(res), 500
+    except:
+        print("Get user's goals error")
+        res = {
+            "code": "get_user_goals_error",
+            "message": "Unknown error. Please, try again later",
+            "data": ''
+        }
+        return jsonify(res), 500
 
 def getAvailableGoals(user_id, page, per_page):
     try:

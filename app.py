@@ -137,42 +137,34 @@ def authUser():
     if (not username or username==''):
         print("Username is null")
         return jsonify({'message': 'Username is null'}), 400
-    #try:
-    user = User()
-    user.getUserByUsername(username)
-    if user.id == 0:
-        return jsonify({'message': 'User does not exist.'}), 404
-    else:
-        return jsonify(user.toJSON()), 200
-    #except:
-    #    print("User auth error")
-    #    return jsonify({'message': 'Server internal error'}), 500
+    try:
+        user = User()
+        user.getUserByUsername(username)
+        if user.id == 0:
+            return jsonify({'message': 'User does not exist.'}), 404
+        else:
+            return jsonify(user.toJSON()), 200
+    except:
+        print("User auth error")
+        return jsonify({'message': 'Server internal error'}), 500
 
 # Register a new user
 @app.route(BASE_URL+'/users', methods=['GET', 'POST'], endpoint='registerUser')
 @login_service
 def registerUser():
-#    try:
-        print('1')
+    try:
         if request.method == 'POST':
-            print('2')
             request_data = request.get_json()
-            print('3')
             user = User()
-            print('4')
-            print(request_data)
             user.fromJSON(request_data)
-            print('5')
             res = user.save()
-            print('6')
-            print(res)
             return res
         else:
             print("Incorrect request")
             return jsonify({'message': 'Incorrect request'}), 400
-#    except:
-#        print("User registration error")
-#        return jsonify({'message': 'Server internal error'}), 500
+    except:
+        print("User registration error")
+        return jsonify({'message': 'Server internal error'}), 500
 
 # Delete a user
 @app.route(BASE_URL+'/users/<int:id>', methods=['DELETE'], endpoint='deleteUser')
@@ -223,31 +215,31 @@ def updateUser(id):
     if (not id or id=='' or id==0):
         print("User ID is null")
         return jsonify({'message': 'User ID is null'}), 400
-    #try:
-    user = User()
-    user.getUserById(id)
-    if user.id == 0:
-        return jsonify({'message': 'User does not exist.'}), 404
-    elif not user.username == request.authorization.username:
-        return jsonify({'message': 'Unable to update data of other users'}), 403
-    else:
-        if request.method == 'POST':
-            request_data = request.get_json()
-            user.fromJSON(request_data)
-            res = user.save()
-            return res
+    try:
+        user = User()
+        user.getUserById(id)
+        if user.id == 0:
+            return jsonify({'message': 'User does not exist.'}), 404
+        elif not user.username == request.authorization.username:
+            return jsonify({'message': 'Unable to update data of other users'}), 403
         else:
-            print("Incorrect request")
-            return jsonify({'message': 'Incorrect request'}), 400
-    #except:
-    #    print("User data error")
-    #    return jsonify({'message': 'Server internal error'}), 500
+            if request.method == 'POST':
+                request_data = request.get_json()
+                user.fromJSON(request_data)
+                res = user.save()
+                return res
+            else:
+                print("Incorrect request")
+                return jsonify({'message': 'Incorrect request'}), 400
+    except:
+        print("User data error")
+        return jsonify({'message': 'Server internal error'}), 500
 
 # Create a goal
 @app.route(BASE_URL+'/posts', methods=['POST'], endpoint='createGoal')
 @login
 def createGoal():
-    #try:
+    try:
         if request.method == 'POST':
             request_data = request.get_json()
             goal = Goal()
@@ -260,9 +252,9 @@ def createGoal():
         else:
             print("Incorrect request")
             return jsonify({'message': 'Incorrect request'}), 400
-    #except:
-    #    print("Goal save error")
-    #    return jsonify({'message': 'Server internal error'}), 500
+    except:
+        print("Goal save error")
+        return jsonify({'message': 'Server internal error'}), 500
 
 # Get user's goals - personal and available
 @app.route(BASE_URL+'/posts', methods=['GET'], endpoint='getUserGoals')
@@ -276,30 +268,30 @@ def getUserGoals():
     if (not username or username==''):
         print("Username is null")
         return jsonify({'message': 'Username is null'}), 400
-    #try:
-    if 'page' in request.args:
-        page = request.args.get('page')
-    else:
-        page = 1
-    if 'per_page' in request.args:
-        per_page = request.args.get('per_page')
-    else:
-        per_page = 100
-    user = User()
-    if 'author' in request.args:
-        author = request.args.get('author')
-        user.getUserById(author)
-        if not user.username == username:
-            print("Wrong request to get other user's goals")
-            return jsonify({'message': 'Unable to update data of other users'}), 403
+    try:
+        if 'page' in request.args:
+            page = request.args.get('page')
         else:
-            return getPersonalUserGoals(author, page, per_page)
-    else:
-        user.getUserByUsername(username)
-        return getAvailableGoals(user.id, page, per_page)
-    #except:
-    #    print("Get user's goals error")
-    #    return jsonify({'message': 'Server internal error'}), 500
+            page = 1
+        if 'per_page' in request.args:
+            per_page = request.args.get('per_page')
+        else:
+            per_page = 100
+        user = User()
+        if 'author' in request.args:
+            author = request.args.get('author')
+            user.getUserById(author)
+            if not user.username == username:
+                print("Wrong request to get other user's goals")
+                return jsonify({'message': 'Unable to update data of other users'}), 403
+            else:
+                return getPersonalUserGoals(author, page, per_page)
+        else:
+            user.getUserByUsername(username)
+            return getAvailableGoals(user.id, page, per_page)
+    except:
+        print("Get user's goals error")
+        return jsonify({'message': 'Server internal error'}), 500
 
 # Complete or update the goal
 @app.route(BASE_URL+'/posts/<int:id>', methods=['POST'], endpoint='updateGoal')
@@ -485,7 +477,7 @@ def searchFriends():
 @app.route(BASE_URL+'/friends/requests/<int:id>', methods=['POST'], endpoint='friendsRequest')
 @login
 def friendsRequest(id):
-    #try:
+    try:
         if request.method == 'POST':
             username = request.authorization.username
             if (not username or username==''):
@@ -516,9 +508,9 @@ def friendsRequest(id):
         else:
             print("Incorrect request")
             return jsonify({'message': 'Incorrect request'}), 400
-    #except:
-    #    print("Goal save error")
-    #    return jsonify({'message': 'Server internal error'}), 500
+    except:
+        print("Goal save error")
+        return jsonify({'message': 'Server internal error'}), 500
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=8000)
