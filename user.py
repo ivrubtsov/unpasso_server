@@ -98,40 +98,23 @@ class User:
     def fromJSON(this, data):
         if not data:
             return
-        print('11')
         # data = json.loads(data)
-        print('12')
-        print(data)
-        print(this.id)
         if 'id' in data:
             this.id = data['id']
-        print(this.id)
-        print(this.name)
         if 'name' in data:
-            this.name = data['name']
-        print(this.name)
-        print(this.date)        
+            this.name = data['name']     
         if 'date' in data:
             this.date = datetime.fromisoformat(data['date'])
-        print(this.date)
-        print(this.username) 
         if 'username' in data:
             this.username = data['username']
-        print(this.username)
-        print(this.password) 
         if 'password' in data:
             this.password = wp_crypt.crypt_private(data['password'])
-        print(this.password)
-        print(this.avatar) 
         if 'description' in data:
             description = data['description']
-            print(description)
         if 'avatar' in data:
             this.avatar = data['avatar']
         elif 'description' in data and 'avatar' in description:
             this.avatar = description['avatar']
-        print(this.avatar)
-        print('12')
         
         if 'email' in data:
             this.email = data['email']
@@ -149,7 +132,6 @@ class User:
             this.achievements = data['achievements']
         elif 'description' in data and 'achievements' in description:
             this.achievements = description['achievements']
-        print('13')
         return
 
     def toJSON(this):
@@ -176,6 +158,7 @@ class User:
                 'description': {
                     'achievements': this.achievements,
                     'avatar': this.avatar,
+                    'rating': this.rating,
                     'friends': friendsIds,
                     'friendsRequestsReceived': friendsRequestsReceivedIds,
                     'friendsRequestsSent': friendsRequestsSentIds,
@@ -196,6 +179,7 @@ class User:
                 'description': {
                     'achievements': this.achievements,
                     'avatar': this.avatar,
+                    'rating': this.rating,
                     },
                 'link': SITE_URL+'/author/'+this.username,
         }
@@ -211,6 +195,7 @@ class User:
                 'description': {
                     'achievements': this.achievements,
                     'avatar': this.avatar,
+                    'rating': this.rating,
                     'friends': this.friends,
                     'friendsRequestsReceived': this.friendsRequestsReceived,
                     'friendsRequestsSent': this.friendsRequestsSent,
@@ -229,9 +214,7 @@ class User:
             achs = []
             if cursor.rowcount>0:
                 for (id_achievement) in res:
-                    print('achievement:'+str(id_achievement))
                     achs.append(id_achievement[0])
-            print(achs)
             return achs
         except:
             print("Database get achievements request error")
@@ -277,7 +260,6 @@ class User:
                             'rating': rating,
                         }
                     })
-            print('friends:',friends)
             return friends
         except:
             print("Database get friends error")
@@ -301,7 +283,6 @@ class User:
                             'rating': rating,
                         }
                     })
-            print('friendsRequestsSent:',friendsRequestsSent)
             return friendsRequestsSent
         except:
             print("Database get friends requests sent error")
@@ -325,7 +306,6 @@ class User:
                             'rating': rating,
                         }
                     })
-            print('friendsRequestsReceived:',friendsRequestsReceived)
             return friendsRequestsReceived
         except:
             print("Database get friends requests received error")
