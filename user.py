@@ -319,7 +319,7 @@ class User:
                     cursor.execute(query)
                     db.commit()
                     this.friendsRequestsReceived = this.getFriendsRequestsReceived()
-                    return jsonify(this.toJSON()), 200
+                    return jsonify(this.toFriendsJSON()), 200
             cursor = db.cursor()
             query = "INSERT INTO friends (id_user, id_friend) VALUES ("+str(this.id)+", "+str(friend_id)+"), ("+str(friend_id)+", "+str(this.id)+");"
             cursor.execute(query)
@@ -360,13 +360,13 @@ class User:
             return jsonify(res), 500
 
     def sendFriendsRequest(this, friend_id):
-    #    try:
+        try:
             for friendsRequest in this.friendsRequestsSent:
                 if friendsRequest['id'] == friend_id:
-                    return jsonify(this.toJSON()), 200
+                    return jsonify(this.toFriendsJSON()), 200
             for friend in this.friends:
                 if friend['id'] == friend_id:
-                    return jsonify(this.toJSON()), 200
+                    return jsonify(this.toFriendsJSON()), 200
             cursor = db.cursor()
             date = datetime.now()
             query = "INSERT INTO friends_requests (id_source, id_target, id_status, date) VALUES ("+str(this.id)+", "+str(friend_id)+", 1, '"+date.isoformat(" ", "seconds")+"');"
@@ -375,14 +375,14 @@ class User:
             this.friendsRequestsSent = this.getFriendsRequestsSent()
             this.updateRating()
             return jsonify(this.toFriendsJSON()), 200
-    #    except:
-    #        print("Database send friends request error")
-    #        res = {
-    #            "code": "friends_send_error",
-    #            "message": "Unknown error. Please, try again later",
-    #            "data": ''
-    #        }
-    #        return jsonify(res), 500
+        except:
+            print("Database send friends request error")
+            res = {
+                "code": "friends_send_error",
+                "message": "Unknown error. Please, try again later",
+                "data": ''
+            }
+            return jsonify(res), 500
 
     def removeFriend(this, friend_id):
         try:
@@ -640,10 +640,7 @@ def check_auth(username, password):
     if cursor.rowcount>0:
         res = cursor.fetchall()
         for (db_id, db_username, db_password) in res:
-            print("user_pass: "+password)
             user_password = wp_crypt.crypt_private(password, db_password)
-            print("user_hash: "+user_password)
-            print("db_hash: "+db_password)
             if db_id and db_username and db_password == user_password:
                 auth = True
     return auth
@@ -652,7 +649,7 @@ def check_auth_service(username, password):
     return username == SERVICE_USERNAME and password == SERVICE_PASSWORD
 
 def findUsers(request_string):
-    #try:
+    try:
         cursor = db.cursor()
         query = "SELECT users.id, users.username, users.name, users.email, users.url, users.date, users.avatar, users.rating FROM users WHERE (LOWER(users.name) LIKE "+DB_STRING+"%"+str(request_string)+"%"+DB_STRING+" OR LOWER(users.username) LIKE "+DB_STRING+"%"+str(request_string)+"%"+DB_STRING+") AND users.status=2 LIMIT "+DB_SEARCH_LIMIT+";"
         cursor.execute(query)
@@ -667,21 +664,18 @@ def findUsers(request_string):
                 rating=rating,
                 url=url,
             )
-            print(public.id)
-            print(public.name)
-            print(public.username)
             # public.getAchievements()
             publicUsers.append(public.toPublicJSON())
         return jsonify(publicUsers), 200
 
-    #except:
-    #    print("Search users by name or username error")
-    #    res = {
-    #        "code": "search_users_error",
-    #        "message": "Unknown error. Please, try again later",
-    #        "data": ''
-    #    }
-    #    return jsonify(res), 500
+    except:
+        print("Search users by name or username error")
+        res = {
+            "code": "search_users_error",
+            "message": "Unknown error. Please, try again later",
+            "data": ''
+        }
+        return jsonify(res), 500
 
 def getPublicUserById(request_id):
     try:
