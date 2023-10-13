@@ -652,7 +652,7 @@ def check_auth_service(username, password):
 def findUsers(request_string):
     try:
         cursor = db.cursor()
-        query = "SELECT users.id, users.username, users.name, users.email, users.url, users.date, users.avatar, users.rating FROM users WHERE (users.name LIKE "+DB_STRING+str(request_string)+DB_STRING+" OR users.username LIKE "+DB_STRING+str(request_string)+DB_STRING+") AND users.status=2 LIMIT "+DB_SEARCH_LIMIT+";"
+        query = "SELECT users.id, users.username, users.name, users.email, users.url, users.date, users.avatar, users.rating FROM users WHERE (LOWER(users.name) LIKE "+DB_STRING+"%"+str(request_string)+"%"+DB_STRING+" OR LOWER(users.username) LIKE "+DB_STRING+"%"+str(request_string)+"%"+DB_STRING+") AND users.status=2 LIMIT "+DB_SEARCH_LIMIT+";"
         cursor.execute(query)
         res = cursor.fetchall()
         publicUsers = []
@@ -664,7 +664,10 @@ def findUsers(request_string):
                 avatar=avatar,
                 rating=rating,
             )
-            public.getAchievements()
+            print(public.id)
+            print(public.name)
+            print(public.username)
+            # public.getAchievements()
             publicUsers.append(public)
         return jsonify(publicUsers), 200
 
