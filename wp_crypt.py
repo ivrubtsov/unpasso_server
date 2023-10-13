@@ -8,32 +8,29 @@ import random
 
 itoa64 = './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 
-
 def encode64(textInput,count):
     output = ''
     i = 0
-    while i < count:
+    while i < count  :
         i = i + 1
-        value = ord(str(textInput)[i-1])
+        value = textInput[i-1]
         output = output + itoa64[value & 63]
         if i < count :
-            value = value | ord(str(textInput)[i]) << 8
+            value = value | textInput[i] << 8
         output = output + itoa64[(value >> 6) & 63]
         i = i + 1
         if i >= count:
             break
         if i < count:
-            value = value | ord(str(textInput)[i]) <<16
-            output = output + itoa64[(value >> 12) & 63]
-            i = i + 1
+            value = value | textInput[i] <<16
+        output = output + itoa64[(value >> 12) & 63]
+        i = i + 1
         if i >= count:
             break
         output = output + itoa64[(value >> 18) & 63]
-
     return output
 
-
-def crypt_private(plainText, wordpressHash=None):
+def crypt_private(password, wordpressHash=None):
     if not wordpressHash:
         # generate new salt:
         wordpressHash = '$P$' + random.choice(itoa64[10:14])
@@ -56,15 +53,15 @@ def crypt_private(plainText, wordpressHash=None):
     salt = wordpressHash[4:12] # get salt from the wordpress hash
     if len(salt) != 8:
         return output
+    salt = salt.encode("utf-8")
+    password = password.encode('utf-8')
     # generate the first hash from salt and word to try
-    strEncode = str(salt)+str(plainText)
-    plainTextHash = md5(strEncode.encode('utf-16')).digest()
+    hash = md5(salt + password).digest()
+    # hash = md5((salt+password).encode('utf-8')).digest()
     for i in range (count):
         # regenerate the hash
-        strEncode = str(plainTextHash)+str(plainText)
-        plainTextHash = md5(strEncode.encode('utf-16')).digest()
-
+        hash = md5(hash + password).digest()
     output = wordpressHash[0:12]
     # get the first part of the wordpress hash (type,count,salt)
-    output = output + encode64(plainTextHash,16) # create the new hash
+    output = output + encode64(hash,16) # create the new hash
     return output

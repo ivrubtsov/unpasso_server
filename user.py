@@ -1,5 +1,4 @@
 from flask import jsonify
-import json
 import psycopg2
 import os
 import random
@@ -672,7 +671,7 @@ def findUsers(request_string):
             print(public.name)
             print(public.username)
             # public.getAchievements()
-            publicUsers.append(public.toPublicJSON)
+            publicUsers.append(public.toPublicJSON())
         return jsonify(publicUsers), 200
 
     #except:
