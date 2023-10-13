@@ -641,7 +641,10 @@ def check_auth(username, password):
     if cursor.rowcount>0:
         res = cursor.fetchall()
         for (db_id, db_username, db_password) in res:
+            print("user_pass: "+password)
             user_password = wp_crypt.crypt_private(password, db_password)
+            print("user_hash: "+user_password)
+            print("db_hash: "+db_password)
             if db_id and db_username and db_password == user_password:
                 auth = True
     return auth
@@ -663,12 +666,13 @@ def findUsers(request_string):
                 username=username,
                 avatar=avatar,
                 rating=rating,
+                url=url,
             )
             print(public.id)
             print(public.name)
             print(public.username)
             # public.getAchievements()
-            publicUsers.append(public)
+            publicUsers.append(public.toPublicJSON)
         return jsonify(publicUsers), 200
 
     except:
