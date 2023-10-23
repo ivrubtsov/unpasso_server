@@ -1,5 +1,4 @@
 from flask import jsonify
-import json
 import psycopg2
 import os
 import random
@@ -95,47 +94,43 @@ class User:
         this.friends = friends
         this.friendsRequestsReceived = friendsRequestsReceived
         this.friendsRequestsSent = friendsRequestsSent
-    def fromJSON(this, jsonData):
-        if not jsonData:
+    def fromJSON(this, data):
+        if not data:
             return
-        data = json.loads(jsonData)
+        # data = json.loads(data)
         if 'id' in data:
             this.id = data['id']
-        if json['name']:
-            this.name = data['name']
-        if json['date']:
+        if 'name' in data:
+            this.name = data['name']     
+        if 'date' in data:
             this.date = datetime.fromisoformat(data['date'])
-        if json['username']:
+        if 'username' in data:
             this.username = data['username']
-        if json['password']:
+        if 'password' in data:
             this.password = wp_crypt.crypt_private(data['password'])
-        if json['avatar']:
+        if 'description' in data:
+            description = data['description']
+        if 'avatar' in data:
             this.avatar = data['avatar']
-        elif json['description'] and data['description']['avatar']:
-            this.avatar = data['description']['avatar']
-        if json['email']:
+        elif 'description' in data and 'avatar' in description:
+            this.avatar = description['avatar']
+        
+        if 'email' in data:
             this.email = data['email']
-        if json['url']:
+        if 'url' in data:
             this.url = data['url']
-        if json['locale']:
+        if 'locale' in data:
             this.locale = data['locale']
-        if json['rating']:
+        if 'rating' in data:
             this.rating = data['rating']
-        if json['status']:
+        elif 'description' in data and 'rating' in description:
+            this.rating = description['rating']
+        if 'status' in data:
             this.status = data['status']
-        if json['achievements']:
+        if 'achievements' in data:
             this.achievements = data['achievements']
-        elif json['description'] and json['description']['achievements']:
-            this.achievements = data['description']['achievements']
-#        this.setAchievements()
-#        if json['friends']:
-#            this.friends = json['friends']
-#        elif json['description'] and json['description']['friends']:
-#            this.friends = data['description']['friends']
-#        if json['friendsRequests']:
-#            this.friendsRequests = data['friendsRequests']
-#        elif json['description'] and json['description']['friendsRequests']:
-#            this.friendsRequests = data['description']['friendsRequests']
+        elif 'description' in data and 'achievements' in description:
+            this.achievements = description['achievements']
         return
 
     def toJSON(this):
@@ -162,6 +157,7 @@ class User:
                 'description': {
                     'achievements': this.achievements,
                     'avatar': this.avatar,
+                    'rating': this.rating,
                     'friends': friendsIds,
                     'friendsRequestsReceived': friendsRequestsReceivedIds,
                     'friendsRequestsSent': friendsRequestsSentIds,
@@ -182,6 +178,26 @@ class User:
                 'description': {
                     'achievements': this.achievements,
                     'avatar': this.avatar,
+                    'rating': this.rating,
+                    },
+                'link': SITE_URL+'/author/'+this.username,
+        }
+
+    def toFriendsJSON(this):
+        return {
+                'id': this.id,
+                'name': this.name,
+                'username': this.username,
+                'date': this.date.isoformat("T", "seconds"),
+                'url': this.url,
+                'email': this.email,
+                'description': {
+                    'achievements': this.achievements,
+                    'avatar': this.avatar,
+                    'rating': this.rating,
+                    'friends': this.friends,
+                    'friendsRequestsReceived': this.friendsRequestsReceived,
+                    'friendsRequestsSent': this.friendsRequestsSent,
                     },
                 'link': SITE_URL+'/author/'+this.username,
         }
@@ -191,12 +207,13 @@ class User:
             if not this.id or this.id == 0:
                 return []
             cursor = db.cursor()
-            query = "SELECT id_achievement FROM achievements WHERE id_user="+this.id+";"
+            query = "SELECT id_achievement FROM achievements WHERE id_user="+str(this.id)+";"
             cursor.execute(query)
             res = cursor.fetchall()
             achs = []
-            for (id_achievement) in res:
-                achs.append(id_achievement)
+            if cursor.rowcount>0:
+                for (id_achievement) in res:
+                    achs.append(id_achievement[0])
             return achs
         except:
             print("Database get achievements request error")
@@ -218,6 +235,7 @@ class User:
                 query = query + ';'
                 cursor.execute(query)
             db.commit()
+            this.updateRating()
             return
         except:
             print("Database set achievements request error")
@@ -226,77 +244,82 @@ class User:
     def getFriends(this):
         try:
             cursor = db.cursor()
-            query = "SELECT friends.id_friend, users.username, users.name, users.avatar, users.rating FROM friends, users WHERE friends.id_user="+this.id+" AND friends.id_friend=users.id AND users.status=2;"
+            query = "SELECT friends.id_friend, users.username, users.name, users.avatar, users.rating FROM friends, users WHERE friends.id_user="+str(this.id)+" AND friends.id_friend=users.id AND users.status=2;"
             cursor.execute(query)
             res = cursor.fetchall()
             friends = []
-            for (id, username, name, avatar, rating) in res:
-                friends.append({
-                    'id': id,
-                    'username': username,
-                    'name': name,
-                    'avatar': avatar,
-                    'rating': rating,
-                })
+            if cursor.rowcount>0:
+                for (id, username, name, avatar, rating) in res:
+                    friends.append({
+                        'id': id,
+                        'username': username,
+                        'name': name,
+                        'description': {
+                            'avatar': avatar,
+                            'rating': rating,
+                        }
+                    })
             return friends
         except:
-            print("Database get friends request error")
+            print("Database get friends error")
             return []
 
     def getFriendsRequestsSent(this):
         try:
             cursor = db.cursor()
-            query = "SELECT friends_requests.id, friends_requests.id_status, users.id, users.username, users.name, users.avatar, users.rating FROM friends_requests, users WHERE friends_requests.id_source="+this.id+" AND friends_requests.id_target=users.id AND users.status=2 AND friends_requests.id_status=1 ORDER BY friends_requests DESC;"
+            query = "SELECT friends_requests.id, friends_requests.id_status, users.id, users.username, users.name, users.avatar, users.rating FROM friends_requests, users WHERE friends_requests.id_source="+str(this.id)+" AND friends_requests.id_target=users.id AND users.status=2 AND friends_requests.id_status=1 ORDER BY friends_requests DESC;"
             cursor.execute(query)
             res = cursor.fetchall()
             friendsRequestsSent = []
-            for (requestid, status, userid, username, name, avatar, rating) in res:
-                friendsRequestsSent.append({
-                    'requestId': requestid,
-                    'status': status,
-                    'id': userid,
-                    'username': username,
-                    'name': name,
-                    'avatar': avatar,
-                    'rating': rating,
-                })
+            if cursor.rowcount>0:
+                for (requestid, status, userid, username, name, avatar, rating) in res:
+                    friendsRequestsSent.append({
+                        'id': userid,
+                        'username': username,
+                        'name': name,
+                        'description': {
+                            'avatar': avatar,
+                            'rating': rating,
+                        }
+                    })
             return friendsRequestsSent
         except:
-            print("Database get friends request error")
+            print("Database get friends requests sent error")
             return []
 
     def getFriendsRequestsReceived(this):
         try:
             cursor = db.cursor()
-            query = "SELECT friends_requests.id, friends_requests.id_status, users.id, users.username, users.name, users.avatar, users.rating FROM friends_requests, users WHERE friends_requests.id_target="+this.id+" AND friends_requests.id_source=users.id AND users.status=2 AND friends_requests.id_status=1 ORDER BY friends_requests DESC;"
+            query = "SELECT friends_requests.id, friends_requests.id_status, users.id, users.username, users.name, users.avatar, users.rating FROM friends_requests, users WHERE friends_requests.id_target="+str(this.id)+" AND friends_requests.id_source=users.id AND users.status=2 AND friends_requests.id_status=1 ORDER BY friends_requests DESC;"
             cursor.execute(query)
             res = cursor.fetchall()
             friendsRequestsReceived = []
-            for (requestid, status, userid, username, name, avatar, rating) in res:
-                friendsRequestsReceived.append({
-                    'requestId': requestid,
-                    'status': status,
-                    'id': userid,
-                    'username': username,
-                    'name': name,
-                    'avatar': avatar,
-                    'rating': rating,
-                })
+            if cursor.rowcount>0:
+                for (requestid, status, userid, username, name, avatar, rating) in res:
+                    friendsRequestsReceived.append({
+                        'id': userid,
+                        'username': username,
+                        'name': name,
+                        'description': {
+                            'avatar': avatar,
+                            'rating': rating,
+                        }
+                    })
             return friendsRequestsReceived
         except:
-            print("Database get friends request error")
+            print("Database get friends requests received error")
             return []
 
     def acceptFriendsRequest(this, friend_id):
         try:
             for friend in this.friends:
-                if friend.id == friend_id:
+                if friend['id'] == friend_id:
                     cursor = db.cursor()
                     query = "UPDATE friends_requests SET id_status=2 WHERE id_source="+str(friend_id)+" AND id_target="+str(this.id)+";"
                     cursor.execute(query)
                     db.commit()
                     this.friendsRequestsReceived = this.getFriendsRequestsReceived()
-                    return jsonify(this.toJSON()), 200
+                    return jsonify(this.toFriendsJSON()), 200
             cursor = db.cursor()
             query = "INSERT INTO friends (id_user, id_friend) VALUES ("+str(this.id)+", "+str(friend_id)+"), ("+str(friend_id)+", "+str(this.id)+");"
             cursor.execute(query)
@@ -305,9 +328,8 @@ class User:
             db.commit()
             this.friends = this.getFriends()
             this.friendsRequestsReceived = this.getFriendsRequestsReceived()
-            this.calculateRating()
-            this.save()
-            return jsonify(this.toJSON()), 200
+            this.updateRating()
+            return jsonify(this.toFriendsJSON()), 200
         except:
             print("Database accept friends request error")
             res = {
@@ -320,14 +342,14 @@ class User:
     def rejectFriendsRequest(this, friend_id):
         try:
             for friend in this.friends:
-                if friend.id == friend_id:
+                if friend['id'] == friend_id:
                     this.removeFriend(friend_id)
             cursor = db.cursor()
             query = "UPDATE friends_requests SET id_status=3 WHERE id_source="+str(friend_id)+" AND id_target="+str(this.id)+";"
             cursor.execute(query)
             db.commit()
             this.friendsRequestsReceived = this.getFriendsRequestsReceived()
-            return jsonify(this.toJSON()), 200
+            return jsonify(this.toFriendsJSON()), 200
         except:
             print("Database reject friend request error")
             res = {
@@ -340,20 +362,19 @@ class User:
     def sendFriendsRequest(this, friend_id):
         try:
             for friendsRequest in this.friendsRequestsSent:
-                if friendsRequest.id == friend_id:
-                    return jsonify(this.toJSON()), 200
+                if friendsRequest['id'] == friend_id:
+                    return jsonify(this.toFriendsJSON()), 200
             for friend in this.friends:
-                if friend.id == friend_id:
-                    return jsonify(this.toJSON()), 200
+                if friend['id'] == friend_id:
+                    return jsonify(this.toFriendsJSON()), 200
             cursor = db.cursor()
             date = datetime.now()
             query = "INSERT INTO friends_requests (id_source, id_target, id_status, date) VALUES ("+str(this.id)+", "+str(friend_id)+", 1, '"+date.isoformat(" ", "seconds")+"');"
             cursor.execute(query)
             db.commit()
             this.friendsRequestsSent = this.getFriendsRequestsSent()
-            this.calculateRating()
-            this.save()
-            return jsonify(this.toJSON()), 200
+            this.updateRating()
+            return jsonify(this.toFriendsJSON()), 200
         except:
             print("Database send friends request error")
             res = {
@@ -365,8 +386,10 @@ class User:
 
     def removeFriend(this, friend_id):
         try:
+            print(this.friends)
             for friend in this.friends:
-                if friend.id == friend_id:
+                print(friend)
+                if friend['id'] == friend_id:
                     cursor = db.cursor()
                     query = "DELETE FROM friends WHERE id_user="+str(friend_id)+" AND id_friend="+str(this.id)+";"
                     cursor.execute(query)
@@ -374,7 +397,8 @@ class User:
                     cursor.execute(query)
                     db.commit()
                     this.friends = this.getFriends()
-            return jsonify(this.toJSON()), 200
+                    this.updateRating()
+            return jsonify(this.toFriendsJSON()), 200
         except:
             print("Database remove friend request error")
             res = {
@@ -388,14 +412,16 @@ class User:
     def getUserByUsername(this, request_username):
         try:
             cursor = db.cursor()
-            query = "SELECT users.id, users.username, users.name, users.email, users.url, users.locale, users.date, users.avatar, users.rating FROM users WHERE users.username='"+request_username+"' AND users.status=2 LIMIT 1;"
+            query = "SELECT users.id, users.username, users.name, users.email, users.password, users.url, users.locale, users.date, users.avatar, users.rating FROM users WHERE users.username='"+request_username+"' AND users.status=2 LIMIT 1;"
             cursor.execute(query)
             res = cursor.fetchone()
-            for (id, username, name, email, url, locale, date, avatar, rating) in res:
+            if res:
+                (id, username, name, email, password, url, locale, date, avatar, rating) = res
                 this.id = id
                 this.name = name
-                this.date = datetime.fromisoformat(date)
+                this.date = date
                 this.username = username
+                this.password = password
                 this.avatar = avatar
                 this.email = email
                 this.url = url
@@ -413,14 +439,16 @@ class User:
     def getUserById(this, request_id):
         try:
             cursor = db.cursor()
-            query = "SELECT users.id, users.username, users.name, users.email, users.url, users.locale, users.date, users.avatar, users.rating FROM users WHERE users.id="+str(request_id)+" AND users.status=2 LIMIT 1;"
+            query = "SELECT users.id, users.username, users.name, users.email, users.password, users.url, users.locale, users.date, users.avatar, users.rating FROM users WHERE users.id="+str(request_id)+" AND users.status=2 LIMIT 1;"
             cursor.execute(query)
             res = cursor.fetchone()
-            for (id, username, name, email, url, locale, date, avatar, rating) in res:
+            if res:
+                (id, username, name, email, password, url, locale, date, avatar, rating) = res
                 this.id = id
                 this.name = name
-                this.date = datetime.fromisoformat(date)
+                this.date = date
                 this.username = username
+                this.password = password
                 this.avatar = avatar
                 this.email = email
                 this.url = url
@@ -440,18 +468,18 @@ class User:
             #Check email format
             if not checkEmail(this.email):
                 res = {
-                    "code": "rest_invalid_param",
-                    "message": "Invalid parameter(s): email",
-                    "data": {
-                        "status": 400,
-                        "params": {
-                            "email": "Invalid email address."
+                    'code': 'rest_invalid_param',
+                    'message': 'Invalid parameter(s): email',
+                    'data': {
+                        'status': 400,
+                        'params': {
+                            'email': "Invalid email address."
                         },
-                        "details": {
-                            "email": {
-                                "code": "rest_invalid_email",
-                                "message": "Invalid email address.",
-                                "data": ''
+                        'details': {
+                            'email': {
+                                'code': 'rest_invalid_email',
+                                'message': 'Invalid email address.',
+                                'data': '',
                             }
                         }
                     }
@@ -462,23 +490,25 @@ class User:
             query = "SELECT users.id FROM users WHERE users.username='"+this.username+"' AND users.status=2 AND NOT users.id="+str(this.id)+" LIMIT 1;"
             cursor.execute(query)
             if cursor.rowcount>0:
+                print('user exists')
                 res = {
-                    "code": "existing_user_login",
-                    "message": "Sorry, that username already exists!",
-                    "data": ''
+                    'code': 'existing_user_login',
+                    'message': 'Sorry, this username is already taken!',
+                    'data': '',
                 }
-                return jsonify(res), 400
+                return jsonify(res), 500
             # Check email exists
 
             query = "SELECT users.id FROM users WHERE users.email='"+this.email+"' AND users.status=2 AND NOT users.id="+str(this.id)+" LIMIT 1;"
             cursor.execute(query)
             if cursor.rowcount>0:
+                print('email exists')
                 res = {
-                    "code": "existing_user_email",
-                    "message": "Sorry, that email address is already used!",
-                    "data": ''
+                    'code': 'existing_user_email',
+                    'message': 'Sorry, this email address is already used!',
+                    'data': '',
                 }
-                return jsonify(res), 400
+                return jsonify(res), 500
             this.url = SITE_URL+"/author/"+this.username
             if this.id == 0:
                 this.date = datetime.now()
@@ -492,6 +522,7 @@ class User:
                 cursor.execute(query)
                 this.setAchievements()
             db.commit()
+            print('user save successful')
             return jsonify(this.toJSON()), 200
         except:
             print("User save error")
@@ -538,6 +569,25 @@ class User:
             }
             return jsonify(res), 500
         
+    def updateRating(this):
+        try:
+            this.rating = this.calculateRating()
+            if this.id != 0:
+                cursor = db.cursor()
+                query = "UPDATE users SET rating="+str(this.rating)+" WHERE id="+str(this.id)+";"
+                cursor.execute(query)
+                db.commit()
+            print('user rating update successful')
+            return
+        except:
+            print("User rating update error")
+            res = {
+                "code": "user_rating_update_error",
+                "message": "Unknown error. Please, try again later",
+                "data": ''
+            }
+            return jsonify(res), 500
+
     def calculateRating(this):
         try:
             cursor = db.cursor()
@@ -590,7 +640,8 @@ def check_auth(username, password):
     if cursor.rowcount>0:
         res = cursor.fetchall()
         for (db_id, db_username, db_password) in res:
-            if db_id and db_username and db_password == wp_crypt.crypt_private(password):
+            user_password = wp_crypt.crypt_private(password, db_password)
+            if db_id and db_username and db_password == user_password:
                 auth = True
     return auth
 
@@ -600,7 +651,7 @@ def check_auth_service(username, password):
 def findUsers(request_string):
     try:
         cursor = db.cursor()
-        query = "SELECT users.id, users.username, users.name, users.email, users.url, users.date, users.avatar, users.rating FROM users WHERE (users.name LIKE "+DB_STRING+str(request_string)+DB_STRING+" OR users.username LIKE "+DB_STRING+str(request_string)+DB_STRING+") AND users.status=2 LIMIT "+DB_SEARCH_LIMIT+";"
+        query = "SELECT users.id, users.username, users.name, users.email, users.url, users.date, users.avatar, users.rating FROM users WHERE (LOWER(users.name) LIKE "+DB_STRING+"%"+str(request_string)+"%"+DB_STRING+" OR LOWER(users.username) LIKE "+DB_STRING+"%"+str(request_string)+"%"+DB_STRING+") AND users.status=2 LIMIT "+DB_SEARCH_LIMIT+";"
         cursor.execute(query)
         res = cursor.fetchall()
         publicUsers = []
@@ -611,9 +662,10 @@ def findUsers(request_string):
                 username=username,
                 avatar=avatar,
                 rating=rating,
+                url=url,
             )
-            public.getAchievements()
-            publicUsers.append(public)
+            # public.getAchievements()
+            publicUsers.append(public.toPublicJSON())
         return jsonify(publicUsers), 200
 
     except:
