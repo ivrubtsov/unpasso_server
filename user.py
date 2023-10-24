@@ -50,6 +50,7 @@ def open_database_connection():
 db = open_database_connection()
 
 def check_db():
+    global db
     if not db.closed == 0:
         db = open_database_connection()
         return
