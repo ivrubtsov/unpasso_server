@@ -34,17 +34,29 @@ MASTER_USER = os.getenv('MASTER_USER')
 if not MASTER_USER:
     MASTER_USER = 737
 
-try:
-    db = psycopg2.connect(database=DB_DATABASE,
-                            host=DB_SERVER,
-                            user=DB_USER,
-                            password=DB_PASSWORD,
-                            port=DB_PORT)
-    print('Database connection established')
+def open_database_connection():
+    try:
+        connection = psycopg2.connect(database=DB_DATABASE,
+                                host=DB_SERVER,
+                                user=DB_USER,
+                                password=DB_PASSWORD,
+                                port=DB_PORT)
+        print('Database connection established')
+        return connection
+    except:
+        print("Database connection error")
+        quit()
+db = open_database_connection()
 
-except:
-    print("Database connection error")
-    quit()
+def check_db():
+    if not db.closed == 0:
+        db = open_database_connection()
+        return
+    try:
+        cursor = db.cursor()
+        cursor.execute('SELECT 1')
+    except psycopg2.OperationalError:
+        db = open_database_connection()
 
 import atexit
 #defining function to run on shutdown
@@ -170,6 +182,7 @@ class Goal:
 
     def getLikes(this):
         try:
+            check_db()
             cursor = db.cursor()
             query = "SELECT id_user FROM likes WHERE id_post="+str(this.id)+";"
             cursor.execute(query)
@@ -188,6 +201,7 @@ class Goal:
         try:
             this.getLikes()
             if not id_user in this.likeUsers:
+                check_db()
                 cursor = db.cursor()
                 query = "INSERT INTO likes (id_post, id_user) VALUES ("+str(this.id)+", "+str(id_user)+");"
                 cursor.execute(query)
@@ -203,6 +217,7 @@ class Goal:
         try:
             this.getLikes()
             if id_user in this.likeUsers:
+                check_db()
                 cursor = db.cursor()
                 query = "DELETE FROM likes WHERE id_post="+str(this.id)+" AND id_user="+str(id_user)+";"
                 cursor.execute(query)
@@ -216,6 +231,7 @@ class Goal:
 
     def getGoalById(this, request_id):
         try:
+            check_db()
             cursor = db.cursor()
             query = "SELECT posts.id, posts.author, posts.date, posts.title, posts.link, posts.status, posts.iscompleted, posts.ispublic, posts.isfriends, posts.isprivate FROM posts WHERE posts.id="+str(request_id)+" AND posts.status=1 ORDER BY posts.date DESC LIMIT 1;"
             cursor.execute(query)
@@ -257,6 +273,7 @@ class Goal:
                 isprivate = "TRUE"
             else:
                 isprivate = "FALSE"
+            check_db()
             cursor = db.cursor()
             if this.id == 0:
                 # this.date = datetime.now()
@@ -282,6 +299,7 @@ class Goal:
 
     def delete(this):
         try:
+            check_db()
             cursor = db.cursor()
             this.status = 6
             query = "UPDATE posts SET status="+str(this.status)+" WHERE id="+str(this.id)+";"
@@ -311,6 +329,7 @@ def getPersonalUserGoals(user_id, page, per_page):
                 per_page = DB_FETCH_LIMIT
         else:
             per_page = DB_FETCH_LIMIT
+        check_db()
         cursor = db.cursor()
         offset = per_page * (page - 1)
         query = "SELECT posts.id, posts.author, posts.date, posts.title, posts.link, posts.status, posts.iscompleted, posts.ispublic, posts.isfriends, posts.isprivate FROM posts WHERE posts.author="+str(user_id)+" AND posts.status=1 ORDER BY posts.date DESC LIMIT "+str(per_page)+" OFFSET "+str(offset)+";"
@@ -359,6 +378,7 @@ def getAvailableGoals(user_id, page, per_page):
         else:
             per_page = DB_FETCH_LIMIT
         offset = per_page * (page - 1)
+        check_db()
         cursor = db.cursor()
         query = "SELECT DISTINCT posts.id, posts.author, posts.date, posts.title, posts.link, posts.status, posts.iscompleted, posts.ispublic, posts.isfriends, posts.isprivate FROM posts, friends WHERE ((posts.ispublic=TRUE OR (posts.author=friends.id_user AND friends.id_friend="+str(user_id)+" AND posts.isfriends=TRUE)) AND posts.status=1 AND NOT posts.author="+str(user_id)+") ORDER BY posts.date DESC LIMIT "+str(per_page)+" OFFSET "+str(offset)+";"
         cursor.execute(query)

@@ -35,17 +35,29 @@ AVATAR_MAX = os.getenv('AVATAR_MAX')
 if not AVATAR_MAX:
     AVATAR_MAX = 50
 
-try:
-    db = psycopg2.connect(database=DB_DATABASE,
-                            host=DB_SERVER,
-                            user=DB_USER,
-                            password=DB_PASSWORD,
-                            port=DB_PORT)
-    print('Database connection established')
+def open_database_connection():
+    try:
+        connection = psycopg2.connect(database=DB_DATABASE,
+                                host=DB_SERVER,
+                                user=DB_USER,
+                                password=DB_PASSWORD,
+                                port=DB_PORT)
+        print('Database connection established')
+        return connection
+    except:
+        print("Database connection error")
+        quit()
+db = open_database_connection()
 
-except:
-    print("Database connection error")
-    quit()
+def check_db():
+    if not db.closed == 0:
+        db = open_database_connection()
+        return
+    try:
+        cursor = db.cursor()
+        cursor.execute('SELECT 1')
+    except psycopg2.OperationalError:
+        db = open_database_connection()
 
 import atexit
 #defining function to run on shutdown
@@ -206,6 +218,7 @@ class User:
         try:
             if not this.id or this.id == 0:
                 return []
+            check_db()
             cursor = db.cursor()
             query = "SELECT id_achievement FROM achievements WHERE id_user="+str(this.id)+";"
             cursor.execute(query)
@@ -221,6 +234,7 @@ class User:
 
     def setAchievements(this):
         try:
+            check_db()
             cursor = db.cursor()
             query = "DELETE FROM achievements WHERE id_user="+str(this.id)+";"
             cursor.execute(query)
@@ -243,6 +257,7 @@ class User:
 
     def getFriends(this):
         try:
+            check_db()
             cursor = db.cursor()
             query = "SELECT friends.id_friend, users.username, users.name, users.avatar, users.rating FROM friends, users WHERE friends.id_user="+str(this.id)+" AND friends.id_friend=users.id AND users.status=2;"
             cursor.execute(query)
@@ -266,6 +281,7 @@ class User:
 
     def getFriendsRequestsSent(this):
         try:
+            check_db()
             cursor = db.cursor()
             query = "SELECT friends_requests.id, friends_requests.id_status, users.id, users.username, users.name, users.avatar, users.rating FROM friends_requests, users WHERE friends_requests.id_source="+str(this.id)+" AND friends_requests.id_target=users.id AND users.status=2 AND friends_requests.id_status=1 ORDER BY friends_requests DESC;"
             cursor.execute(query)
@@ -289,6 +305,7 @@ class User:
 
     def getFriendsRequestsReceived(this):
         try:
+            check_db()
             cursor = db.cursor()
             query = "SELECT friends_requests.id, friends_requests.id_status, users.id, users.username, users.name, users.avatar, users.rating FROM friends_requests, users WHERE friends_requests.id_target="+str(this.id)+" AND friends_requests.id_source=users.id AND users.status=2 AND friends_requests.id_status=1 ORDER BY friends_requests DESC;"
             cursor.execute(query)
@@ -314,12 +331,14 @@ class User:
         try:
             for friend in this.friends:
                 if friend['id'] == friend_id:
+                    check_db()
                     cursor = db.cursor()
                     query = "UPDATE friends_requests SET id_status=2 WHERE id_source="+str(friend_id)+" AND id_target="+str(this.id)+";"
                     cursor.execute(query)
                     db.commit()
                     this.friendsRequestsReceived = this.getFriendsRequestsReceived()
                     return jsonify(this.toFriendsJSON()), 200
+            check_db()
             cursor = db.cursor()
             query = "INSERT INTO friends (id_user, id_friend) VALUES ("+str(this.id)+", "+str(friend_id)+"), ("+str(friend_id)+", "+str(this.id)+");"
             cursor.execute(query)
@@ -344,6 +363,7 @@ class User:
             for friend in this.friends:
                 if friend['id'] == friend_id:
                     this.removeFriend(friend_id)
+            check_db()
             cursor = db.cursor()
             query = "UPDATE friends_requests SET id_status=3 WHERE id_source="+str(friend_id)+" AND id_target="+str(this.id)+";"
             cursor.execute(query)
@@ -367,6 +387,7 @@ class User:
             for friend in this.friends:
                 if friend['id'] == friend_id:
                     return jsonify(this.toFriendsJSON()), 200
+            check_db()
             cursor = db.cursor()
             date = datetime.now()
             query = "INSERT INTO friends_requests (id_source, id_target, id_status, date) VALUES ("+str(this.id)+", "+str(friend_id)+", 1, '"+date.isoformat(" ", "seconds")+"');"
@@ -390,6 +411,7 @@ class User:
             for friend in this.friends:
                 print(friend)
                 if friend['id'] == friend_id:
+                    check_db()
                     cursor = db.cursor()
                     query = "DELETE FROM friends WHERE id_user="+str(friend_id)+" AND id_friend="+str(this.id)+";"
                     cursor.execute(query)
@@ -411,6 +433,7 @@ class User:
 
     def getUserByUsername(this, request_username):
         try:
+            check_db()
             cursor = db.cursor()
             query = "SELECT users.id, users.username, users.name, users.email, users.password, users.url, users.locale, users.date, users.avatar, users.rating FROM users WHERE users.username='"+request_username+"' AND users.status=2 LIMIT 1;"
             cursor.execute(query)
@@ -438,6 +461,7 @@ class User:
 
     def getUserById(this, request_id):
         try:
+            check_db()
             cursor = db.cursor()
             query = "SELECT users.id, users.username, users.name, users.email, users.password, users.url, users.locale, users.date, users.avatar, users.rating FROM users WHERE users.id="+str(request_id)+" AND users.status=2 LIMIT 1;"
             cursor.execute(query)
@@ -486,6 +510,7 @@ class User:
                 }
                 return jsonify(res), 400
             # Check username
+            check_db()
             cursor = db.cursor()
             query = "SELECT users.id FROM users WHERE users.username='"+this.username+"' AND users.status=2 AND NOT users.id="+str(this.id)+" LIMIT 1;"
             cursor.execute(query)
@@ -535,6 +560,7 @@ class User:
 
     def delete(this):
         try:
+            check_db()
             cursor = db.cursor()
             #query = "DELETE FROM users WHERE id="+this.id+";"
             this.status = 4
@@ -553,6 +579,7 @@ class User:
 
     def initialInvite(this):
         try:
+            check_db()
             cursor = db.cursor()
             date = datetime.now()
             query = "INSERT INTO friends_requests (id_source, id_target, id_status, date) VALUES ("+str(MASTER_USER)+", "+str(this.id)+", 1, '"+date.isoformat(" ", "seconds")+"');"
@@ -573,6 +600,7 @@ class User:
         try:
             this.rating = this.calculateRating()
             if this.id != 0:
+                check_db()
                 cursor = db.cursor()
                 query = "UPDATE users SET rating="+str(this.rating)+" WHERE id="+str(this.id)+";"
                 cursor.execute(query)
@@ -590,6 +618,7 @@ class User:
 
     def calculateRating(this):
         try:
+            check_db()
             cursor = db.cursor()
             query = "SELECT count(posts.id) FROM posts WHERE posts.author="+str(this.id)+" AND posts.status=1;"
             cursor.execute(query)
@@ -633,6 +662,7 @@ def checkEmail(email):
         return False
 
 def check_auth(username, password):
+    check_db()
     cursor = db.cursor()
     query = "SELECT users.id, users.username, users.password FROM users WHERE (users.username="+DB_STRING+username+DB_STRING+" OR users.email="+DB_STRING+username+DB_STRING+") AND users.status=2;"
     cursor.execute(query)
@@ -650,6 +680,7 @@ def check_auth_service(username, password):
 
 def findUsers(request_string):
     try:
+        check_db()
         cursor = db.cursor()
         query = "SELECT users.id, users.username, users.name, users.email, users.url, users.date, users.avatar, users.rating FROM users WHERE (LOWER(users.name) LIKE "+DB_STRING+"%"+str(request_string)+"%"+DB_STRING+" OR LOWER(users.username) LIKE "+DB_STRING+"%"+str(request_string)+"%"+DB_STRING+") AND users.status=2 LIMIT "+DB_SEARCH_LIMIT+";"
         cursor.execute(query)
@@ -679,6 +710,7 @@ def findUsers(request_string):
 
 def getPublicUserById(request_id):
     try:
+        check_db()
         cursor = db.cursor()
         query = "SELECT users.id, users.username, users.name, users.email, users.url, users.date, users.avatar, users.rating FROM users WHERE users.id="+str(request_id)+" AND users.status=2 LIMIT 1;"
         cursor.execute(query)
