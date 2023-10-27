@@ -513,7 +513,7 @@ class User:
             # Check username
             check_db()
             cursor = db.cursor()
-            query = "SELECT users.id FROM users WHERE users.username='"+this.username+"' AND users.status=2 AND NOT users.id="+str(this.id)+" LIMIT 1;"
+            query = "SELECT users.id FROM users WHERE users.username="+DB_STRING+this.username+DB_STRING+" AND users.status=2 AND NOT users.id="+str(this.id)+" LIMIT 1;"
             cursor.execute(query)
             if cursor.rowcount>0:
                 print('user exists')
@@ -525,7 +525,7 @@ class User:
                 return jsonify(res), 500
             # Check email exists
 
-            query = "SELECT users.id FROM users WHERE users.email='"+this.email+"' AND users.status=2 AND NOT users.id="+str(this.id)+" LIMIT 1;"
+            query = "SELECT users.id FROM users WHERE users.email="+DB_STRING+this.email+DB_STRING+" AND users.status=2 AND NOT users.id="+str(this.id)+" LIMIT 1;"
             cursor.execute(query)
             if cursor.rowcount>0:
                 print('email exists')
