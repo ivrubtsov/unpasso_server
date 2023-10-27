@@ -16,24 +16,21 @@ if not DB_STRING:
 DB_SEARCH_LIMIT = os.getenv('DB_SEARCH_LIMIT')
 if not DB_SEARCH_LIMIT:
     DB_SEARCH_LIMIT = 10
-DB_FETCH_LIMIT = os.getenv('DB_FETCH_LIMIT')
-if not DB_FETCH_LIMIT:
-    DB_FETCH_LIMIT = 100
-TMP_DIR = os.getenv('TMP_DIR')
-if not TMP_DIR:
-    TMP_DIR = 'tmp'
+else:
+    DB_SEARCH_LIMIT = int(DB_SEARCH_LIMIT)
 SITE_URL = os.getenv('SITE_URL')
-BASE_URL = os.getenv('BASE_URL')
-if not BASE_URL:
-    BASE_URL = '/wp-json/wp/v2'
 SERVICE_USERNAME = os.getenv('SERVICE_USERNAME')
 SERVICE_PASSWORD = os.getenv('SERVICE_PASSWORD')
 MASTER_USER = os.getenv('MASTER_USER')
 if not MASTER_USER:
     MASTER_USER = 737
+else:
+    MASTER_USER = int(MASTER_USER)
 AVATAR_MAX = os.getenv('AVATAR_MAX')
 if not AVATAR_MAX:
     AVATAR_MAX = 50
+else:
+    AVATAR_MAX = int(AVATAR_MAX)
 
 def open_database_connection():
     try:
@@ -680,7 +677,7 @@ def check_auth_service(username, password):
     return username == SERVICE_USERNAME and password == SERVICE_PASSWORD
 
 def findUsers(request_string):
-    #try:
+    try:
         check_db()
         cursor = db.cursor()
         query = "SELECT users.id, users.username, users.name, users.email, users.url, users.date, users.avatar, users.rating FROM users WHERE (LOWER(users.name) LIKE "+DB_STRING+"%"+str(request_string)+"%"+DB_STRING+" OR LOWER(users.username) LIKE "+DB_STRING+"%"+str(request_string)+"%"+DB_STRING+") AND users.status=2 LIMIT "+str(DB_SEARCH_LIMIT)+";"
@@ -700,14 +697,14 @@ def findUsers(request_string):
             publicUsers.append(public.toPublicJSON())
         return jsonify(publicUsers), 200
 
-    # except Exception as e:
-    #     print("Search users by name or username error: "+str(e))
-    #     res = {
-    #         "code": "search_users_error",
-    #         "message": "Unknown error. Please, try again later",
-    #         "data": ''
-    #     }
-    #     return jsonify(res), 500
+    except Exception as e:
+        print("Search users by name or username error: "+str(e))
+        res = {
+            "code": "search_users_error",
+            "message": "Unknown error. Please, try again later",
+            "data": ''
+        }
+        return jsonify(res), 500
 
 def getPublicUserById(request_id):
     try:

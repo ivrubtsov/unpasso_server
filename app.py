@@ -529,11 +529,11 @@ def searchFriends():
     else:
         print("Search string is null")
         return jsonify([]), 200
-    #try:
-    return findUsers(text)
-    #except Exception as e:
-    #    print("Search users error: "+str(e))
-    #    return jsonify({'message': 'Server internal error'}), 500
+    try:
+        return findUsers(text)
+    except Exception as e:
+        print("Search users error: "+str(e))
+        return jsonify({'message': 'Server internal error'}), 500
 
 # Process friends requests
 @app.route(BASE_URL+'/friends/requests/<int:id>', methods=['POST'], endpoint='friendsRequest')
