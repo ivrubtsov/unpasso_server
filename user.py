@@ -510,7 +510,7 @@ class User:
             # Check username
             check_db()
             cursor = db.cursor()
-            query = "SELECT users.id FROM users WHERE users.username="+DB_STRING+this.username+DB_STRING+" AND users.status=2 AND NOT users.id="+str(this.id)+" LIMIT 1;"
+            query = "SELECT users.id FROM users WHERE LOWER(users.username)="+DB_STRING+this.username.lower()+DB_STRING+" AND users.status=2 AND NOT users.id="+str(this.id)+" LIMIT 1;"
             cursor.execute(query)
             if cursor.rowcount>0:
                 print('user exists')
@@ -522,7 +522,7 @@ class User:
                 return jsonify(res), 500
             # Check email exists
 
-            query = "SELECT users.id FROM users WHERE users.email="+DB_STRING+this.email+DB_STRING+" AND users.status=2 AND NOT users.id="+str(this.id)+" LIMIT 1;"
+            query = "SELECT users.id FROM users WHERE LOWER(users.email)="+DB_STRING+this.email.lower()+DB_STRING+" AND users.status=2 AND NOT users.id="+str(this.id)+" LIMIT 1;"
             cursor.execute(query)
             if cursor.rowcount>0:
                 print('email exists')
@@ -563,6 +563,12 @@ class User:
             #query = "DELETE FROM users WHERE id="+this.id+";"
             this.status = 4
             query = "UPDATE users SET status="+str(this.status)+" WHERE id="+str(this.id)+";"
+            cursor.execute(query)
+            query = "UPDATE posts SET status=8 WHERE author="+str(this.id)+";"
+            cursor.execute(query)
+            query = "UPDATE friends_requests SET status=3 WHERE id_source="+str(this.id)+" OR id_target="+str(this.id)+";"
+            cursor.execute(query)
+            query = "DELETE FROM friends WHERE id_user="+str(this.id)+" OR id_friend="+str(this.id)+";"
             cursor.execute(query)
             db.commit()
             return jsonify(this.toJSON()), 200
@@ -662,7 +668,7 @@ def checkEmail(email):
 def check_auth(username, password):
     check_db()
     cursor = db.cursor()
-    query = "SELECT users.id, users.username, users.password FROM users WHERE (users.username="+DB_STRING+username+DB_STRING+" OR users.email="+DB_STRING+username+DB_STRING+") AND users.status=2;"
+    query = "SELECT users.id, users.username, users.password FROM users WHERE (LOWER(users.username)="+DB_STRING+username.lower()+DB_STRING+" OR LOWER(users.email)="+DB_STRING+username.lower()+DB_STRING+") AND users.status=2;"
     cursor.execute(query)
     auth = False
     if cursor.rowcount>0:
