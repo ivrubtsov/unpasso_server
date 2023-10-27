@@ -680,7 +680,7 @@ def check_auth_service(username, password):
     return username == SERVICE_USERNAME and password == SERVICE_PASSWORD
 
 def findUsers(request_string):
-    try:
+    #try:
         check_db()
         cursor = db.cursor()
         query = "SELECT users.id, users.username, users.name, users.email, users.url, users.date, users.avatar, users.rating FROM users WHERE (LOWER(users.name) LIKE "+DB_STRING+"%"+str(request_string)+"%"+DB_STRING+" OR LOWER(users.username) LIKE "+DB_STRING+"%"+str(request_string)+"%"+DB_STRING+") AND users.status=2 LIMIT "+str(DB_SEARCH_LIMIT)+";"
@@ -700,14 +700,14 @@ def findUsers(request_string):
             publicUsers.append(public.toPublicJSON())
         return jsonify(publicUsers), 200
 
-    except Exception as e:
-        print("Search users by name or username error: "+str(e))
-        res = {
-            "code": "search_users_error",
-            "message": "Unknown error. Please, try again later",
-            "data": ''
-        }
-        return jsonify(res), 500
+    # except Exception as e:
+    #     print("Search users by name or username error: "+str(e))
+    #     res = {
+    #         "code": "search_users_error",
+    #         "message": "Unknown error. Please, try again later",
+    #         "data": ''
+    #     }
+    #     return jsonify(res), 500
 
 def getPublicUserById(request_id):
     try:
