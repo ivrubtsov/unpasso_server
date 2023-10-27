@@ -683,7 +683,7 @@ def findUsers(request_string):
     try:
         check_db()
         cursor = db.cursor()
-        query = "SELECT users.id, users.username, users.name, users.email, users.url, users.date, users.avatar, users.rating FROM users WHERE (LOWER(users.name) LIKE "+DB_STRING+"%"+str(request_string)+"%"+DB_STRING+" OR LOWER(users.username) LIKE "+DB_STRING+"%"+str(request_string)+"%"+DB_STRING+") AND users.status=2 LIMIT "+DB_SEARCH_LIMIT+";"
+        query = "SELECT users.id, users.username, users.name, users.email, users.url, users.date, users.avatar, users.rating FROM users WHERE (LOWER(users.name) LIKE "+DB_STRING+"%"+str(request_string)+"%"+DB_STRING+" OR LOWER(users.username) LIKE "+DB_STRING+"%"+str(request_string)+"%"+DB_STRING+") AND users.status=2 LIMIT "+str(DB_SEARCH_LIMIT)+";"
         cursor.execute(query)
         res = cursor.fetchall()
         publicUsers = []
