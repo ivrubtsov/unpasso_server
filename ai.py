@@ -33,6 +33,7 @@ def generateGoal(user: User, mode='run'):
         prompt = gen_prompt(goals, isnew=True)
     response = get_completion(prompt)
     if mode=='test':
+            print(response)
             return response
     if response:
         try:
