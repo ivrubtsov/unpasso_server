@@ -26,7 +26,8 @@ def generateGoal(user: User, mode='run'):
     if goals:
         prompt = gen_prompt(goals, isnew=False)
     elif mode=='run':
-        goals = aiGetAllGoals()
+        # goals = aiGetAllGoals()
+        goals = []
         prompt = gen_prompt(goals, isnew=True)
     else:
         prompt = gen_prompt(goals, isnew=True)
