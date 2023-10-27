@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+import json
 import openai
 from ai_task import gen_prompt
 from user import User
@@ -29,7 +30,7 @@ def generateGoal(user: User, mode='run'):
         prompt = gen_prompt(goals, isnew=True)
     else:
         prompt = gen_prompt(goals, isnew=True)
-    response = get_completion(prompt)
+    response = json.loads(get_completion(prompt))
     print(response)
     if mode=='run':
         genGoal = Goal(
