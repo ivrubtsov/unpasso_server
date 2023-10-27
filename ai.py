@@ -30,22 +30,37 @@ def generateGoal(user: User, mode='run'):
         prompt = gen_prompt(goals, isnew=True)
     else:
         prompt = gen_prompt(goals, isnew=True)
-    response = json.loads(get_completion(prompt))
-    # print('GenAI user '+str(user.id))
-    # print(response)
-    if mode=='run':
-        genGoal = Goal(
-            author=user.id,
-            title=response["title"],
-            status=7,
-            ispublic=False,
-            isfriends=False,
-            isprivate=True,
-            isgenerated=True,
-            isaccepted=False,
-        )
-        genGoal.save()
-        return response["title"]
-    elif mode=='test':
-        return response
+    response = get_completion(prompt)
+    if mode=='test':
+            return response
+    if response:
+        try:
+            jsonResponse = json.loads(get_completion(prompt))
+        except:
+            print('AI response doesn\'t contain JSON')
+            print('GenAI user '+str(user.id))
+            print(response)
+            jsonResponse = ''
+        if jsonResponse["title"]:
+            genGoal = Goal(
+                author=user.id,
+                title=jsonResponse["title"],
+                status=7,
+                ispublic=False,
+                isfriends=False,
+                isprivate=True,
+                isgenerated=True,
+                isaccepted=False,
+            )
+            genGoal.save()
+            return jsonResponse["title"]
+        else:
+            print('AI response doesn\'t contain goal')
+            print('GenAI user '+str(user.id))
+            print(response)
+            return ''
+    else:
+        print('AI response doesn\'t contain response')
+        print('GenAI user '+str(user.id))
+        return ''
     
