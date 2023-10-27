@@ -37,7 +37,7 @@ def generateGoal(user: User, mode='run'):
             return response
     if response:
         try:
-            jsonResponse = json.loads(get_completion(prompt))
+            jsonResponse = json.loads(response)
         except:
             print('AI response doesn\'t contain JSON')
             print('GenAI user '+str(user.id))
