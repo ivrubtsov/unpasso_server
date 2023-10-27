@@ -202,11 +202,9 @@ class Goal:
             cursor.execute(query)
             res = cursor.fetchall()
             likes = []
-            for (id_user) in res:
-                print('id_user='+str(id_user))
-                likes.append(id_user)
-            print('likes=')
-            print(likes)
+            if cursor.rowcount>0:
+                for (id_user) in res:
+                    likes.append(id_user[0])
             this.likeUsers = likes
             this.likes = len(this.likeUsers)
             return
@@ -232,13 +230,8 @@ class Goal:
 
     def removeLike(this, id_user):
         try:
-            print('this.likes')
-            print(this.likeUsers)
             this.getLikes()
-            print(this.likeUsers)
-            print(type(this.likeUsers))
             if id_user in this.likeUsers:
-                print('found')
                 check_db()
                 cursor = db.cursor()
                 query = "DELETE FROM likes WHERE id_post="+str(this.id)+" AND id_user="+str(id_user)+";"
