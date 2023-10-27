@@ -124,8 +124,8 @@ def authUser():
             return jsonify({'message': 'User does not exist.'}), 404
         else:
             return jsonify(user.toJSON()), 200
-    except:
-        print("User auth error")
+    except Exception as e:
+        print("User auth error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
 # Register a new user
@@ -142,8 +142,8 @@ def registerUser():
         else:
             print("Incorrect request")
             return jsonify({'message': 'Incorrect request'}), 400
-    except:
-        print("User registration error")
+    except Exception as e:
+        print("User registration error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
 # Delete a user
@@ -163,8 +163,8 @@ def deleteUser(id):
         else:
             res = user.delete()
             return res
-    except:
-        print("User delete error")
+    except Exception as e:
+        print("User delete error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
 # Get a user data
@@ -183,8 +183,8 @@ def getUser(id):
             return jsonify(user.toPublicJSON()), 200
         else:
             return jsonify(user.toJSON()), 200
-    except:
-        print("User data error")
+    except Exception as e:
+        print("User data error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
 # Update user's data
@@ -211,8 +211,8 @@ def updateUser(id):
             else:
                 print("Incorrect request")
                 return jsonify({'message': 'Incorrect request'}), 400
-    except:
-        print("User data error")
+    except Exception as e:
+        print("User data error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
 # Create a goal
@@ -232,8 +232,8 @@ def createGoal():
         else:
             print("Incorrect request")
             return jsonify({'message': 'Incorrect request'}), 400
-    except:
-        print("Goal save error")
+    except Exception as e:
+        print("Goal save error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
 # Get user's goals - personal and available
@@ -269,8 +269,8 @@ def getUserGoals():
         else:
             user.getUserByUsername(username)
             return getAvailableGoals(user.id, page, per_page)
-    except:
-        print("Get user's goals error")
+    except Exception as e:
+        print("Get user's goals error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
 # Complete or update the goal
@@ -303,8 +303,8 @@ def updateGoal(id):
             res = goal.save()
             user.updateRating()
             return res
-    except:
-        print("Goal data error")
+    except Exception as e:
+        print("Goal data error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
 # Get the goal by ID
@@ -333,8 +333,8 @@ def getGoal(id):
             return jsonify({'message': 'Unable to get hidden data of other users'}), 403
         else:
             return jsonify(goal.toJSON()), 200
-    except:
-        print("Get goal data error")
+    except Exception as e:
+        print("Get goal data error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
 #  static String getFriends() => '$_baseUrl/friends';
@@ -372,8 +372,8 @@ def likeGoal(id):
         else:
             print("Incorrect request")
             return jsonify({'message': 'Incorrect request'}), 400
-    except:
-        print("Goal like error")
+    except Exception as e:
+        print("Goal like error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
 # Unlike the goal
@@ -398,8 +398,8 @@ def unLikeGoal(id):
         else:
             print("Incorrect request")
             return jsonify({'message': 'Incorrect request'}), 400
-    except:
-        print("Goal unlike error")
+    except Exception as e:
+        print("Goal unlike error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
 # Generate a new goal by AI
@@ -419,8 +419,8 @@ def genGoal():
         user.getUserByUsername(username)
         title = generateGoal(user, mode='run')
         return jsonify({'title': title}), 200
-    except:
-        print("Generate new goal error")
+    except Exception as e:
+        print("Generate new goal error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
 # Generate a new test goal by AI for a user
@@ -448,8 +448,8 @@ def getFriends():
         user = User()
         user.getUserByUsername(username)
         return jsonify(user.friends), 200
-    except:
-        print("Get user's friends error")
+    except Exception as e:
+        print("Get user's friends error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
 # Get user's friends received requests
@@ -468,8 +468,8 @@ def getFriendsRequestsReceived():
         user = User()
         user.getUserByUsername(username)
         return jsonify(user.friendsRequestsReceived), 200
-    except:
-        print("Get user's friends received error")
+    except Exception as e:
+        print("Get user's friends received error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
 # Get user's friends sent requests
@@ -488,8 +488,8 @@ def getFriendsRequestsSent():
         user = User()
         user.getUserByUsername(username)
         return jsonify(user.friendsRequestsSent), 200
-    except:
-        print("Get user's friends sent error")
+    except Exception as e:
+        print("Get user's friends sent error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
 # Get user's friends and requests data
@@ -508,8 +508,8 @@ def getFriendsData(id):
             return jsonify(user.toPublicJSON()), 200
         else:
             return jsonify(user.toFriendsJSON()), 200
-    except:
-        print("User data error")
+    except Exception as e:
+        print("User data error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
 # Search for friends
@@ -531,8 +531,8 @@ def searchFriends():
         return jsonify([]), 200
     try:
         return findUsers(text)
-    except:
-        print("Search users error")
+    except Exception as e:
+        print("Search users error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
 # Process friends requests
@@ -570,8 +570,8 @@ def friendsRequest(id):
         else:
             print("Incorrect request")
             return jsonify({'message': 'Incorrect request'}), 400
-    except:
-        print("Goal save error")
+    except Exception as e:
+        print("Goal save error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
 if __name__ == '__main__':

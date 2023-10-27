@@ -1,5 +1,4 @@
 from flask import jsonify
-import json
 import psycopg2
 import os
 from datetime import datetime
@@ -49,8 +48,8 @@ def open_database_connection():
                                 port=DB_PORT)
         print('Database connection established')
         return connection
-    except:
-        print("Database connection error")
+    except Exception as e:
+        print("Database connection error: "+str(e))
         quit()
 db = open_database_connection()
 
@@ -216,8 +215,8 @@ class Goal:
             this.likeUsers = likes
             this.likes = len(this.likeUsers)
             return
-        except:
-            print("Database get likes request error")
+        except Exception as e:
+            print("Database get likes request error: "+str(e))
             return []
 
     def addLike(this, id_user):
@@ -232,8 +231,8 @@ class Goal:
                 this.likeUsers.append(id_user)
                 this.likes = this.likes+1
             return
-        except:
-            print("Database add like request error")
+        except Exception as e:
+            print("Database add like request error: "+str(e))
             return
 
     def removeLike(this, id_user):
@@ -248,8 +247,8 @@ class Goal:
                 this.likeUsers.remove(id_user)
                 this.likes = this.likes-1
             return
-        except:
-            print("Database remove like request error")
+        except Exception as e:
+            print("Database remove like request error: "+str(e))
             return
 
     def getGoalById(this, request_id):
@@ -276,8 +275,8 @@ class Goal:
                 this.isaccepted = isaccepted
                 this.getLikes()
             return
-        except:
-            print("Get post data by ID error")
+        except Exception as e:
+            print("Get post data by ID error: "+str(e))
             return        
     
     def save(this):
@@ -324,8 +323,8 @@ class Goal:
                 cursor.execute(query)
             db.commit()
             return jsonify(this.toJSON()), 200
-        except:
-            print("Post save error")
+        except Exception as e:
+            print("Post save error: "+str(e))
             res = {
                 "code": "post_save_error",
                 "message": "Unknown error. Please, try again later",
@@ -342,8 +341,8 @@ class Goal:
             cursor.execute(query)
             db.commit()
             return jsonify(this.toJSON()), 200
-        except:
-            print("Post delete error")
+        except Exception as e:
+            print("Post delete error: "+str(e))
             res = {
                 "code": "post_delete_error",
                 "message": "Unknown error. Please, try again later",
@@ -392,8 +391,8 @@ def getPersonalUserGoals(user_id, page, per_page):
                 goal.getLikes()
                 goals.append(goal.toJSON())
         return jsonify(goals), 200
-    except:
-        print("Get user's goals error")
+    except Exception as e:
+        print("Get user's goals error: "+str(e))
         res = {
             "code": "get_user_goals_error",
             "message": "Unknown error. Please, try again later",
@@ -440,8 +439,8 @@ def getAvailableGoals(user_id, page, per_page):
                 goal.getLikes()
                 goals.append(goal.toJSON())
         return jsonify(goals), 200
-    except:
-        print("Get available goals error")
+    except Exception as e:
+        print("Get available goals error: "+str(e))
         res = {
             "code": "get_available_goals_error",
             "message": "Unknown error. Please, try again later",
@@ -469,8 +468,8 @@ def aiGetUserGoals(user_id):
                 }
                 goals.append(goal)
         return goals
-    except:
-        print("Get user's goals for AI error")
+    except Exception as e:
+        print("Get user's goals for AI error: "+str(e))
         return []
 
 def aiGetAllGoals():
@@ -492,6 +491,6 @@ def aiGetAllGoals():
                 }
                 goals.append(goal)
         return goals
-    except:
-        print("Get all users' goals for AI error")
+    except Exception as e:
+        print("Get all users' goals for AI error: "+str(e))
         return []

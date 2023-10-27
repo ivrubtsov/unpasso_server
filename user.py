@@ -44,8 +44,8 @@ def open_database_connection():
                                 port=DB_PORT)
         print('Database connection established')
         return connection
-    except:
-        print("Database connection error")
+    except Exception as e:
+        print("Database connection error: "+str(e))
         quit()
 db = open_database_connection()
 
@@ -229,8 +229,8 @@ class User:
                 for (id_achievement) in res:
                     achs.append(id_achievement[0])
             return achs
-        except:
-            print("Database get achievements request error")
+        except Exception as e:
+            print("Database get achievements request error: "+str(e))
             return []
 
     def setAchievements(this):
@@ -252,8 +252,8 @@ class User:
             db.commit()
             this.updateRating()
             return
-        except:
-            print("Database set achievements request error")
+        except Exception as e:
+            print("Database set achievements request error: "+str(e))
             return
 
     def getFriends(this):
@@ -276,8 +276,8 @@ class User:
                         }
                     })
             return friends
-        except:
-            print("Database get friends error")
+        except Exception as e:
+            print("Database get friends error: "+str(e))
             return []
 
     def getFriendsRequestsSent(this):
@@ -300,8 +300,8 @@ class User:
                         }
                     })
             return friendsRequestsSent
-        except:
-            print("Database get friends requests sent error")
+        except Exception as e:
+            print("Database get friends requests sent error: "+str(e))
             return []
 
     def getFriendsRequestsReceived(this):
@@ -324,8 +324,8 @@ class User:
                         }
                     })
             return friendsRequestsReceived
-        except:
-            print("Database get friends requests received error")
+        except Exception as e:
+            print("Database get friends requests received error: "+str(e))
             return []
 
     def acceptFriendsRequest(this, friend_id):
@@ -350,8 +350,8 @@ class User:
             this.friendsRequestsReceived = this.getFriendsRequestsReceived()
             this.updateRating()
             return jsonify(this.toFriendsJSON()), 200
-        except:
-            print("Database accept friends request error")
+        except Exception as e:
+            print("Database accept friends request error: "+str(e))
             res = {
                 "code": "friends_accept_error",
                 "message": "Unknown error. Please, try again later",
@@ -371,8 +371,8 @@ class User:
             db.commit()
             this.friendsRequestsReceived = this.getFriendsRequestsReceived()
             return jsonify(this.toFriendsJSON()), 200
-        except:
-            print("Database reject friend request error")
+        except Exception as e:
+            print("Database reject friend request error: "+str(e))
             res = {
                 "code": "friends_reject_error",
                 "message": "Unknown error. Please, try again later",
@@ -397,8 +397,8 @@ class User:
             this.friendsRequestsSent = this.getFriendsRequestsSent()
             this.updateRating()
             return jsonify(this.toFriendsJSON()), 200
-        except:
-            print("Database send friends request error")
+        except Exception as e:
+            print("Database send friends request error: "+str(e))
             res = {
                 "code": "friends_send_error",
                 "message": "Unknown error. Please, try again later",
@@ -422,8 +422,8 @@ class User:
                     this.friends = this.getFriends()
                     this.updateRating()
             return jsonify(this.toFriendsJSON()), 200
-        except:
-            print("Database remove friend request error")
+        except Exception as e:
+            print("Database remove friend request error: "+str(e))
             res = {
                 "code": "friends_remove_error",
                 "message": "Unknown error. Please, try again later",
@@ -456,8 +456,8 @@ class User:
                 this.friendsRequestsSent = this.getFriendsRequestsSent()
                 this.friendsRequestsReceived = this.getFriendsRequestsReceived()
             return
-        except:
-            print("Get user data by username error")
+        except Exception as e:
+            print("Get user data by username error: "+str(e))
             return        
 
     def getUserById(this, request_id):
@@ -484,8 +484,8 @@ class User:
                 this.friendsRequestsSent = this.getFriendsRequestsSent()
                 this.friendsRequestsReceived = this.getFriendsRequestsReceived()
             return
-        except:
-            print("Get user data by ID error")
+        except Exception as e:
+            print("Get user data by ID error: "+str(e))
             return        
     
     def save(this):
@@ -550,8 +550,8 @@ class User:
             db.commit()
             print('user save successful')
             return jsonify(this.toJSON()), 200
-        except:
-            print("User save error")
+        except Exception as e:
+            print("User save error: "+str(e))
             res = {
                 "code": "user_save_error",
                 "message": "Unknown error. Please, try again later",
@@ -569,8 +569,8 @@ class User:
             cursor.execute(query)
             db.commit()
             return jsonify(this.toJSON()), 200
-        except:
-            print("User delete error")
+        except Exception as e:
+            print("User delete error: "+str(e))
             res = {
                 "code": "user_delete_error",
                 "message": "Unknown error. Please, try again later",
@@ -588,8 +588,8 @@ class User:
             db.commit()
             this.friendsRequestsSent = this.getFriendsRequestsSent()
             return
-        except:
-            print("User Initial invite error")
+        except Exception as e:
+            print("User Initial invite error: "+str(e))
             res = {
                 "code": "user_initial_error",
                 "message": "Unknown error. Please, try again later",
@@ -608,8 +608,8 @@ class User:
                 db.commit()
             print('user rating update successful')
             return
-        except:
-            print("User rating update error")
+        except Exception as e:
+            print("User rating update error: "+str(e))
             res = {
                 "code": "user_rating_update_error",
                 "message": "Unknown error. Please, try again later",
@@ -642,8 +642,8 @@ class User:
             achievements = len(this.achievements)
             rating = goals + goalsCompleted*3 + friends*7 + achievements*37 + friendsRequestsSent
             return rating
-        except:
-            print("User rating calculation error")
+        except Exception as e:
+            print("User rating calculation error: "+str(e))
             return 0
 
 
@@ -700,8 +700,8 @@ def findUsers(request_string):
             publicUsers.append(public.toPublicJSON())
         return jsonify(publicUsers), 200
 
-    except:
-        print("Search users by name or username error")
+    except Exception as e:
+        print("Search users by name or username error: "+str(e))
         res = {
             "code": "search_users_error",
             "message": "Unknown error. Please, try again later",
@@ -726,8 +726,8 @@ def getPublicUserById(request_id):
         public.getAchievements()
         return jsonify(public), 200
 
-    except:
-        print("Get public user data by ID error")
+    except Exception as e:
+        print("Get public user data by ID error: "+str(e))
         res = {
             "code": "get_user_public_error",
             "message": "Unknown error. Please, try again later",
