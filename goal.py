@@ -316,7 +316,7 @@ class Goal:
                 this.link = SITE_URL+'/?p='+str(this.id)
                 query = "UPDATE posts SET link='"+this.link+"' WHERE id="+str(this.id)+";"
                 cursor.execute(query)
-                if this.isgenerated:
+                if this.isgenerated and this.isaccepted:
                     query = "DELETE FROM posts WHERE title="+DB_STRING+this.title+DB_STRING+" AND status=7;"
                     cursor.execute(query)
             else:
