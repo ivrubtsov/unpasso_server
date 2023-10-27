@@ -427,14 +427,10 @@ def genGoal():
 @app.route(BASE_URL+'/posts/generate/test/<int:id>', methods=['GET'], endpoint='genTestGoal')
 @login_service
 def genTestGoal(id):
-    try:
-        user = User()
-        user.getUserById(id)
-        response = generateGoal(user, mode='test')
-        return jsonify(response), 200
-    except:
-        print("Generate new goal error")
-        return jsonify({'message': 'Server internal error'}), 500
+    user = User()
+    user.getUserById(id)
+    response = generateGoal(user, mode='test')
+    return jsonify(response), 200
 
 # Get user's friends
 @app.route(BASE_URL+'/friends', methods=['GET'], endpoint='getFriends')

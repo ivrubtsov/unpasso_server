@@ -450,7 +450,7 @@ def getAvailableGoals(user_id, page, per_page):
         return jsonify(res), 500
 
 def aiGetUserGoals(user_id):
-    try:
+    #try:
         check_db()
         cursor = db.cursor()
         query = "SELECT posts.date, posts.title, posts.iscompleted, posts.isgenerated, posts.isaccepted FROM posts WHERE posts.author="+str(user_id)+" AND (posts.status=1 OR posts.status=7) ORDER BY posts.date DESC LIMIT "+str(OPENAI_GOALS_LIMIT_PERSONAL)+";"
@@ -468,12 +468,12 @@ def aiGetUserGoals(user_id):
                 }
                 goals.append(goal)
         return goals
-    except:
-        print("Get user's goals for AI error")
-        return []
+    #except:
+    #    print("Get user's goals for AI error")
+    #    return []
 
 def aiGetAllGoals():
-    try:
+    #try:
         check_db()
         cursor = db.cursor()
         query = "SELECT posts.date, posts.title, posts.iscompleted, posts.isgenerated, posts.isaccepted FROM posts WHERE (posts.status=1 OR posts.status=7) ORDER BY posts.date DESC LIMIT "+str(OPENAI_GOALS_LIMIT_ALL)+";"
@@ -491,6 +491,6 @@ def aiGetAllGoals():
                 }
                 goals.append(goal)
         return goals
-    except:
-        print("Get user's goals for AI error")
-        return []
+    #except:
+    #    print("Get all users' goals for AI error")
+    #    return []
