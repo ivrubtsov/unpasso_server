@@ -4,34 +4,15 @@ import os
 from dotenv import load_dotenv
 from user import User, check_auth, check_auth_service, getPublicUserById, findUsers
 from goal import Goal, getPersonalUserGoals, getAvailableGoals
+from ai import generateGoal
 
 load_dotenv(".env")
-DB_SERVER = os.getenv('DB_SERVER')
-DB_USER = os.getenv('DB_USER')
-DB_PASSWORD = os.getenv('DB_PASSWORD')
-DB_DATABASE = os.getenv('DB_DATABASE')
-DB_PORT = os.getenv('DB_PORT')
-DB_STRING = os.getenv('DB_STRING')
-if not DB_STRING:
-    DB_STRING = '$$'
-DB_SEARCH_LIMIT = os.getenv('DB_SEARCH_LIMIT')
-if not DB_SEARCH_LIMIT:
-    DB_SEARCH_LIMIT = 10
-DB_FETCH_LIMIT = os.getenv('DB_FETCH_LIMIT')
-if not DB_FETCH_LIMIT:
-    DB_FETCH_LIMIT = 100
 TMP_DIR = os.getenv('TMP_DIR')
 if not TMP_DIR:
     TMP_DIR = 'tmp'
-SITE_URL = os.getenv('SITE_URL')
 BASE_URL = os.getenv('BASE_URL')
 if not BASE_URL:
     BASE_URL = '/wp-json/wp/v2'
-SERVICE_USERNAME = os.getenv('SERVICE_USERNAME')
-SERVICE_PASSWORD = os.getenv('SERVICE_PASSWORD')
-MASTER_USER = os.getenv('MASTER_USER')
-if not MASTER_USER:
-    MASTER_USER = 737
 
 app = Flask(__name__)
 
@@ -419,6 +400,40 @@ def unLikeGoal(id):
             return jsonify({'message': 'Incorrect request'}), 400
     except:
         print("Goal unlike error")
+        return jsonify({'message': 'Server internal error'}), 500
+
+# Generate a new goal by AI
+@app.route(BASE_URL+'/posts/generate', methods=['GET'], endpoint='genGoal')
+@login
+def genGoal():
+    if request.method == 'GET':
+        username = request.authorization.username
+    else:
+        print("Incorrect request")
+        return jsonify({'message': 'Incorrect request'}), 400
+    if (not username or username==''):
+        print("Username is null")
+        return jsonify({'message': 'Username is null'}), 400
+    try:
+        user = User()
+        user.getUserByUsername(username)
+        title = generateGoal(user, mode='run')
+        return jsonify({'title': title}), 200
+    except:
+        print("Generate new goal error")
+        return jsonify({'message': 'Server internal error'}), 500
+
+# Generate a new test goal by AI for a user
+@app.route(BASE_URL+'/posts/generate/test/<int:id>', methods=['GET'], endpoint='genTestGoal')
+@login_service
+def genTestGoal(id):
+    try:
+        user = User()
+        user.getUserById(id)
+        response = generateGoal(user, mode='test')
+        return jsonify(response), 200
+    except:
+        print("Generate new goal error")
         return jsonify({'message': 'Server internal error'}), 500
 
 # Get user's friends

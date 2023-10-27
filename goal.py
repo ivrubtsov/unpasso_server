@@ -21,6 +21,12 @@ if not DB_SEARCH_LIMIT:
 DB_FETCH_LIMIT = os.getenv('DB_FETCH_LIMIT')
 if not DB_FETCH_LIMIT:
     DB_FETCH_LIMIT = 100
+OPENAI_GOALS_LIMIT_PERSONAL = os.getenv('OPENAI_GOALS_LIMIT_PERSONAL')
+if not OPENAI_GOALS_LIMIT_PERSONAL:
+    OPENAI_GOALS_LIMIT_PERSONAL = 300
+OPENAI_GOALS_LIMIT_ALL = os.getenv('OPENAI_GOALS_LIMIT_ALL')
+if not OPENAI_GOALS_LIMIT_ALL:
+    OPENAI_GOALS_LIMIT_ALL = 1000
 TMP_DIR = os.getenv('TMP_DIR')
 if not TMP_DIR:
     TMP_DIR = 'tmp'
@@ -82,6 +88,8 @@ class Goal:
             isprivate = False,
             likes = 0,
             likeUsers = [],
+            isgenerated = False,
+            isaccepted = False,
         ):
         this.id = id
         this.author = author
@@ -95,6 +103,8 @@ class Goal:
         this.isprivate = isprivate
         this.likes = likes
         this.likeUsers = likeUsers
+        this.isgenerated = isgenerated
+        this.isaccepted = isaccepted
     def fromJSON(this, data):
         if not data:
             return
@@ -128,6 +138,14 @@ class Goal:
                 this.isprivate = True
             else:
                 this.isprivate = False
+            if 29 in tags:
+                this.isgenerated = True
+            else:
+                this.isgenerated = False
+            if 30 in tags:
+                this.isaccepted = True
+            else:
+                this.isaccepted = False
         if 'status' in data:
             if data['status'] == 'publish':
                 this.status = 1
@@ -154,6 +172,10 @@ class Goal:
             tags.append(27)
         if this.isprivate:
             tags.append(28)
+        if this.isgenerated:
+            tags.append(29)
+        if this.isaccepted:
+            tags.append(30)
         
         this.date = this.date.replace(tzinfo=None)
 
@@ -234,11 +256,11 @@ class Goal:
         try:
             check_db()
             cursor = db.cursor()
-            query = "SELECT posts.id, posts.author, posts.date, posts.title, posts.link, posts.status, posts.iscompleted, posts.ispublic, posts.isfriends, posts.isprivate FROM posts WHERE posts.id="+str(request_id)+" AND posts.status=1 ORDER BY posts.date DESC LIMIT 1;"
+            query = "SELECT posts.id, posts.author, posts.date, posts.title, posts.link, posts.status, posts.iscompleted, posts.ispublic, posts.isfriends, posts.isprivate, posts.isgenerated, posts.isaccepted FROM posts WHERE posts.id="+str(request_id)+" AND posts.status=1 ORDER BY posts.date DESC LIMIT 1;"
             cursor.execute(query)
             res = cursor.fetchone()
             if cursor.rowcount>0:
-                (id, author, date, title, link, status, iscompleted, ispublic, isfriends, isprivate) = res
+                (id, author, date, title, link, status, iscompleted, ispublic, isfriends, isprivate, isgenerated, isaccepted) = res
                 this.id = id
                 this.author = author
                 #this.date = datetime.fromisoformat(date)
@@ -250,6 +272,8 @@ class Goal:
                 this.ispublic = ispublic
                 this.isfriends = isfriends
                 this.isprivate = isprivate
+                this.isgenerated = isgenerated
+                this.isaccepted = isaccepted
                 this.getLikes()
             return
         except:
@@ -274,16 +298,27 @@ class Goal:
                 isprivate = "TRUE"
             else:
                 isprivate = "FALSE"
+            if this.isgenerated:
+                isgenerated = "TRUE"
+            else:
+                isgenerated = "FALSE"
+            if this.isaccepted:
+                isaccepted = "TRUE"
+            else:
+                isaccepted = "FALSE"
             check_db()
             cursor = db.cursor()
             if this.id == 0:
                 # this.date = datetime.now()
-                query = "INSERT INTO posts (author, date, title, link, status, iscompleted, ispublic, isfriends, isprivate) VALUES ("+str(this.author)+", '"+this.date.isoformat(" ", "seconds")+"', "+DB_STRING+this.title+DB_STRING+", '', "+str(this.status)+", "+iscompleted+", "+ispublic+", "+isfriends+", "+isprivate+") RETURNING id;"
+                query = "INSERT INTO posts (author, date, title, link, status, iscompleted, ispublic, isfriends, isprivate, isgenerated, isaccepted) VALUES ("+str(this.author)+", '"+this.date.isoformat(" ", "seconds")+"', "+DB_STRING+this.title+DB_STRING+", '', "+str(this.status)+", "+iscompleted+", "+ispublic+", "+isfriends+", "+isprivate+", "+isgenerated+", "+isaccepted+") RETURNING id;"
                 cursor.execute(query)
                 this.id = cursor.fetchone()[0]
                 this.link = SITE_URL+'/?p='+str(this.id)
                 query = "UPDATE posts SET link='"+this.link+"' WHERE id="+str(this.id)+";"
                 cursor.execute(query)
+                if this.isgenerated:
+                    query = "DELETE FROM posts WHERE title="+DB_STRING+this.title+DB_STRING+" AND status=7;"
+                    cursor.execute(query)
             else:
                 query = "UPDATE posts SET title="+DB_STRING+this.title+DB_STRING+", link='"+this.link+"', status="+str(this.status)+", iscompleted="+iscompleted+", ispublic="+ispublic+", isfriends="+isfriends+", isprivate="+isprivate+" WHERE id="+str(this.id)+";"
                 cursor.execute(query)
@@ -333,12 +368,12 @@ def getPersonalUserGoals(user_id, page, per_page):
         check_db()
         cursor = db.cursor()
         offset = per_page * (page - 1)
-        query = "SELECT posts.id, posts.author, posts.date, posts.title, posts.link, posts.status, posts.iscompleted, posts.ispublic, posts.isfriends, posts.isprivate FROM posts WHERE posts.author="+str(user_id)+" AND posts.status=1 ORDER BY posts.date DESC LIMIT "+str(per_page)+" OFFSET "+str(offset)+";"
+        query = "SELECT posts.id, posts.author, posts.date, posts.title, posts.link, posts.status, posts.iscompleted, posts.ispublic, posts.isfriends, posts.isprivate, posts.isgenerated, posts.isaccepted FROM posts WHERE posts.author="+str(user_id)+" AND posts.status=1 ORDER BY posts.date DESC LIMIT "+str(per_page)+" OFFSET "+str(offset)+";"
         cursor.execute(query)
         res = cursor.fetchall()
         goals = []
         if cursor.rowcount>0:
-            for (id, author, date, title, link, status, iscompleted, ispublic, isfriends, isprivate) in res:
+            for (id, author, date, title, link, status, iscompleted, ispublic, isfriends, isprivate, isgenerated, isaccepted) in res:
                 goal = Goal(
                     id,
                     author,
@@ -351,6 +386,8 @@ def getPersonalUserGoals(user_id, page, per_page):
                     ispublic,
                     isfriends,
                     isprivate,
+                    isgenerated,
+                    isaccepted,
                 )
                 goal.getLikes()
                 goals.append(goal.toJSON())
@@ -411,3 +448,49 @@ def getAvailableGoals(user_id, page, per_page):
             "data": ''
         }
         return jsonify(res), 500
+
+def aiGetUserGoals(user_id):
+    try:
+        check_db()
+        cursor = db.cursor()
+        query = "SELECT posts.date, posts.title, posts.iscompleted, posts.isgenerated, posts.isaccepted FROM posts WHERE posts.author="+str(user_id)+" AND (posts.status=1 OR posts.status=7) ORDER BY posts.date DESC LIMIT "+str(OPENAI_GOALS_LIMIT_PERSONAL)+";"
+        cursor.execute(query)
+        res = cursor.fetchall()
+        goals = []
+        if cursor.rowcount>0:
+            for (date, title, iscompleted, isgenerated, isaccepted) in res:
+                goal = {
+                    'date': date,
+                    'title': title,
+                    'iscompleted': iscompleted,
+                    'isgenerated': isgenerated,
+                    'isaccepted': isaccepted,
+                }
+                goals.append(goal)
+        return goals
+    except:
+        print("Get user's goals for AI error")
+        return []
+
+def aiGetAllGoals():
+    try:
+        check_db()
+        cursor = db.cursor()
+        query = "SELECT posts.date, posts.title, posts.iscompleted, posts.isgenerated, posts.isaccepted FROM posts WHERE (posts.status=1 OR posts.status=7) ORDER BY posts.date DESC LIMIT "+str(OPENAI_GOALS_LIMIT_ALL)+";"
+        cursor.execute(query)
+        res = cursor.fetchall()
+        goals = []
+        if cursor.rowcount>0:
+            for (date, title, iscompleted, isgenerated, isaccepted) in res:
+                goal = {
+                    'date': date,
+                    'title': title,
+                    'iscompleted': iscompleted,
+                    'isgenerated': isgenerated,
+                    'isaccepted': isaccepted,
+                }
+                goals.append(goal)
+        return goals
+    except:
+        print("Get user's goals for AI error")
+        return []
