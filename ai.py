@@ -31,7 +31,8 @@ def generateGoal(user: User, mode='run'):
     else:
         prompt = gen_prompt(goals, isnew=True)
     response = json.loads(get_completion(prompt))
-    print(response)
+    # print('GenAI user '+str(user.id))
+    # print(response)
     if mode=='run':
         genGoal = Goal(
             author=user.id,

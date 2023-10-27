@@ -414,14 +414,14 @@ def genGoal():
     if (not username or username==''):
         print("Username is null")
         return jsonify({'message': 'Username is null'}), 400
-    #try:
-    user = User()
-    user.getUserByUsername(username)
-    title = generateGoal(user, mode='run')
-    return jsonify({'title': title}), 200
-    #except:
-    #    print("Generate new goal error")
-    #    return jsonify({'message': 'Server internal error'}), 500
+    try:
+        user = User()
+        user.getUserByUsername(username)
+        title = generateGoal(user, mode='run')
+        return jsonify({'title': title}), 200
+    except:
+        print("Generate new goal error")
+        return jsonify({'message': 'Server internal error'}), 500
 
 # Generate a new test goal by AI for a user
 @app.route(BASE_URL+'/posts/generate/test/<int:id>', methods=['GET'], endpoint='genTestGoal')
