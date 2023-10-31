@@ -21,6 +21,8 @@ if not SERVICE_IMPORT_PASSWORD:
 AVATAR_MAX = os.getenv('AVATAR_MAX')
 if not AVATAR_MAX:
     AVATAR_MAX = 50
+else:
+    AVATAR_MAX = int(AVATAR_MAX)
 
 app = Flask(__name__)
 
@@ -595,6 +597,8 @@ def importUsers():
             users = request_data['people']
             for userJSON in users:
                 if ('name' in userJSON) and ('username' in userJSON) and ('email' in userJSON):
+                    print('Importing:')
+                    print(userJSON)
                     user = User(
                         name=userJSON['name'],
                         username=userJSON['username'],
@@ -624,6 +628,8 @@ def importPosts():
             posts = request_data['posts']
             for postJSON in posts:
                 if ('author' in postJSON) and ('title' in postJSON):
+                    print('Importing:')
+                    print(postJSON)
                     goal = Goal(
                         author=int(postJSON['author']),
                         title=postJSON['title'],
