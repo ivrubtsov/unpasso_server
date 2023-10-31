@@ -87,6 +87,7 @@ class User:
             url = '',
             locale = '',
             rating = 0,
+            isPaid = False,
             status = 2,
         ):
         this.id = id
@@ -99,6 +100,7 @@ class User:
         this.url = url
         this.locale = locale
         this.rating = rating
+        this.isPaid = isPaid
         this.status = status
         this.achievements = achievements
         this.friends = friends
@@ -168,6 +170,7 @@ class User:
                     'achievements': this.achievements,
                     'avatar': this.avatar,
                     'rating': this.rating,
+                    'isPaid': this.isPaid,
                     'friends': friendsIds,
                     'friendsRequestsReceived': friendsRequestsReceivedIds,
                     'friendsRequestsSent': friendsRequestsSentIds,
@@ -205,6 +208,7 @@ class User:
                     'achievements': this.achievements,
                     'avatar': this.avatar,
                     'rating': this.rating,
+                    'isPaid': this.isPaid,
                     'friends': this.friends,
                     'friendsRequestsReceived': this.friendsRequestsReceived,
                     'friendsRequestsSent': this.friendsRequestsSent,
@@ -252,6 +256,23 @@ class User:
         except Exception as e:
             print("Database set achievements request error: "+str(e))
             return
+
+    def getPaid(this):
+        try:
+            if not this.id or this.id == 0:
+                return False
+            check_db()
+            cursor = db.cursor()
+            query = "SELECT posts.id FROM posts WHERE posts.author="+str(this.id)+" AND posts.status=1 AND posts.isgenerated=TRUE AND posts.isaccepted=TRUE ORDER BY posts.date DESC LIMIT 1;"
+            cursor.execute(query)
+            res = cursor.fetchall()
+            if cursor.rowcount>0:
+                return True
+            else:
+                return False
+        except Exception as e:
+            print("Database get paid status error: "+str(e))
+            return []
 
     def getFriends(this):
         try:
@@ -448,6 +469,7 @@ class User:
                 this.url = url
                 this.locale = locale
                 this.rating = rating
+                this.isPaid = this.getPaid()
                 this.achievements = this.getAchievements()
                 this.friends = this.getFriends()
                 this.friendsRequestsSent = this.getFriendsRequestsSent()
@@ -476,6 +498,7 @@ class User:
                 this.url = url
                 this.locale = locale
                 this.rating = rating
+                this.isPaid = this.getPaid()
                 this.achievements = this.getAchievements()
                 this.friends = this.getFriends()
                 this.friendsRequestsSent = this.getFriendsRequestsSent()

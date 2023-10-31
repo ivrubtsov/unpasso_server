@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify
 from functools import wraps
 import os
+import random
+import wp_crypt
 from dotenv import load_dotenv
 from user import User, check_auth, check_auth_service, getPublicUserById, findUsers
 from goal import Goal, getPersonalUserGoals, getAvailableGoals
@@ -13,6 +15,12 @@ if not TMP_DIR:
 BASE_URL = os.getenv('BASE_URL')
 if not BASE_URL:
     BASE_URL = '/wp-json/wp/v2'
+SERVICE_IMPORT_PASSWORD = os.getenv('SERVICE_IMPORT_PASSWORD')
+if not SERVICE_IMPORT_PASSWORD:
+    SERVICE_IMPORT_PASSWORD = 'password'
+AVATAR_MAX = os.getenv('AVATAR_MAX')
+if not AVATAR_MAX:
+    AVATAR_MAX = 50
 
 app = Flask(__name__)
 
@@ -572,6 +580,69 @@ def friendsRequest(id):
             return jsonify({'message': 'Incorrect request'}), 400
     except Exception as e:
         print("Goal save error: "+str(e))
+        return jsonify({'message': 'Server internal error'}), 500
+
+# Import users
+@app.route(BASE_URL+'/users/import', methods=['POST'], endpoint='importUsers')
+@login_service
+def importUsers():
+    try:
+        request_data = request.get_json()
+        if not request_data:
+            return jsonify({'message': 'Incorrect request'}), 400
+        result = []
+        if 'people' in request_data:
+            users = request_data['people']
+            for userJSON in users:
+                if ('name' in userJSON) and ('username' in userJSON) and ('email' in userJSON):
+                    user = User(
+                        name=userJSON['name'],
+                        username=userJSON['username'],
+                        email=userJSON['email'],
+                        avatar=random.randint(1, AVATAR_MAX),
+                        status=2,
+                    )
+                    if (not 'password' in userJSON) or (userJSON['password'] == ''):
+                        user.password = wp_crypt.crypt_private(SERVICE_IMPORT_PASSWORD)
+                    res = user.save()
+                    result.append(res[0])
+        return jsonify({'result': result}), 200
+    except Exception as e:
+        print("Users import error: "+str(e))
+        return jsonify({'message': 'Server internal error'}), 500
+
+# Import goals
+@app.route(BASE_URL+'/posts/import', methods=['POST'], endpoint='importPosts')
+@login_service
+def importPosts():
+    try:
+        request_data = request.get_json()
+        if not request_data:
+            return jsonify({'message': 'Incorrect request'}), 400
+        result = []
+        if 'posts' in request_data:
+            posts = request_data['posts']
+            for postJSON in posts:
+                if ('author' in postJSON) and ('title' in postJSON):
+                    goal = Goal(
+                        author=int(postJSON['author']),
+                        title=postJSON['title'],
+                        isprivate=False,
+                        isfriends=False,
+                        ispublic=True,
+                        isgenerated=True,
+                        isaccepted=True,
+                        status=1,
+                    )
+                    # goal.fromJSON(postJSON)
+                    res = goal.save()
+                    user = User()
+                    user.getUserById(goal.author)
+                    user.updateRating()
+                    result.append(res[0])
+        return jsonify({'result': result}), 200
+    except Exception as e:
+        print("Goals import error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
 if __name__ == '__main__':
