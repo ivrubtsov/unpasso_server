@@ -1,37 +1,28 @@
 from flask import Flask, request, jsonify
 from functools import wraps
 import os
+import random
+import wp_crypt
 from dotenv import load_dotenv
 from user import User, check_auth, check_auth_service, getPublicUserById, findUsers
 from goal import Goal, getPersonalUserGoals, getAvailableGoals
+from ai import generateGoal
 
 load_dotenv(".env")
-DB_SERVER = os.getenv('DB_SERVER')
-DB_USER = os.getenv('DB_USER')
-DB_PASSWORD = os.getenv('DB_PASSWORD')
-DB_DATABASE = os.getenv('DB_DATABASE')
-DB_PORT = os.getenv('DB_PORT')
-DB_STRING = os.getenv('DB_STRING')
-if not DB_STRING:
-    DB_STRING = '$$'
-DB_SEARCH_LIMIT = os.getenv('DB_SEARCH_LIMIT')
-if not DB_SEARCH_LIMIT:
-    DB_SEARCH_LIMIT = 10
-DB_FETCH_LIMIT = os.getenv('DB_FETCH_LIMIT')
-if not DB_FETCH_LIMIT:
-    DB_FETCH_LIMIT = 100
 TMP_DIR = os.getenv('TMP_DIR')
 if not TMP_DIR:
     TMP_DIR = 'tmp'
-SITE_URL = os.getenv('SITE_URL')
 BASE_URL = os.getenv('BASE_URL')
 if not BASE_URL:
     BASE_URL = '/wp-json/wp/v2'
-SERVICE_USERNAME = os.getenv('SERVICE_USERNAME')
-SERVICE_PASSWORD = os.getenv('SERVICE_PASSWORD')
-MASTER_USER = os.getenv('MASTER_USER')
-if not MASTER_USER:
-    MASTER_USER = 737
+SERVICE_IMPORT_PASSWORD = os.getenv('SERVICE_IMPORT_PASSWORD')
+if not SERVICE_IMPORT_PASSWORD:
+    SERVICE_IMPORT_PASSWORD = 'password'
+AVATAR_MAX = os.getenv('AVATAR_MAX')
+if not AVATAR_MAX:
+    AVATAR_MAX = 50
+else:
+    AVATAR_MAX = int(AVATAR_MAX)
 
 app = Flask(__name__)
 
@@ -143,8 +134,8 @@ def authUser():
             return jsonify({'message': 'User does not exist.'}), 404
         else:
             return jsonify(user.toJSON()), 200
-    except:
-        print("User auth error")
+    except Exception as e:
+        print("User auth error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
 # Register a new user
@@ -161,8 +152,8 @@ def registerUser():
         else:
             print("Incorrect request")
             return jsonify({'message': 'Incorrect request'}), 400
-    except:
-        print("User registration error")
+    except Exception as e:
+        print("User registration error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
 # Delete a user
@@ -182,8 +173,8 @@ def deleteUser(id):
         else:
             res = user.delete()
             return res
-    except:
-        print("User delete error")
+    except Exception as e:
+        print("User delete error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
 # Get a user data
@@ -202,8 +193,8 @@ def getUser(id):
             return jsonify(user.toPublicJSON()), 200
         else:
             return jsonify(user.toJSON()), 200
-    except:
-        print("User data error")
+    except Exception as e:
+        print("User data error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
 # Update user's data
@@ -230,8 +221,8 @@ def updateUser(id):
             else:
                 print("Incorrect request")
                 return jsonify({'message': 'Incorrect request'}), 400
-    except:
-        print("User data error")
+    except Exception as e:
+        print("User data error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
 # Create a goal
@@ -251,8 +242,8 @@ def createGoal():
         else:
             print("Incorrect request")
             return jsonify({'message': 'Incorrect request'}), 400
-    except:
-        print("Goal save error")
+    except Exception as e:
+        print("Goal save error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
 # Get user's goals - personal and available
@@ -288,8 +279,8 @@ def getUserGoals():
         else:
             user.getUserByUsername(username)
             return getAvailableGoals(user.id, page, per_page)
-    except:
-        print("Get user's goals error")
+    except Exception as e:
+        print("Get user's goals error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
 # Complete or update the goal
@@ -322,8 +313,8 @@ def updateGoal(id):
             res = goal.save()
             user.updateRating()
             return res
-    except:
-        print("Goal data error")
+    except Exception as e:
+        print("Goal data error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
 # Get the goal by ID
@@ -352,8 +343,8 @@ def getGoal(id):
             return jsonify({'message': 'Unable to get hidden data of other users'}), 403
         else:
             return jsonify(goal.toJSON()), 200
-    except:
-        print("Get goal data error")
+    except Exception as e:
+        print("Get goal data error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
 #  static String getFriends() => '$_baseUrl/friends';
@@ -391,8 +382,8 @@ def likeGoal(id):
         else:
             print("Incorrect request")
             return jsonify({'message': 'Incorrect request'}), 400
-    except:
-        print("Goal like error")
+    except Exception as e:
+        print("Goal like error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
 # Unlike the goal
@@ -417,9 +408,39 @@ def unLikeGoal(id):
         else:
             print("Incorrect request")
             return jsonify({'message': 'Incorrect request'}), 400
-    except:
-        print("Goal unlike error")
+    except Exception as e:
+        print("Goal unlike error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
+
+# Generate a new goal by AI
+@app.route(BASE_URL+'/posts/generate', methods=['GET'], endpoint='genGoal')
+@login
+def genGoal():
+    if request.method == 'GET':
+        username = request.authorization.username
+    else:
+        print("Incorrect request")
+        return jsonify({'message': 'Incorrect request'}), 400
+    if (not username or username==''):
+        print("Username is null")
+        return jsonify({'message': 'Username is null'}), 400
+    try:
+        user = User()
+        user.getUserByUsername(username)
+        title = generateGoal(user, mode='run')
+        return jsonify({'title': title}), 200
+    except Exception as e:
+        print("Generate new goal error: "+str(e))
+        return jsonify({'message': 'Server internal error'}), 500
+
+# Generate a new test goal by AI for a user
+@app.route(BASE_URL+'/posts/generate/test/<int:id>', methods=['GET'], endpoint='genTestGoal')
+@login_service
+def genTestGoal(id):
+    user = User()
+    user.getUserById(id)
+    response = generateGoal(user, mode='test')
+    return jsonify(response), 200
 
 # Get user's friends
 @app.route(BASE_URL+'/friends', methods=['GET'], endpoint='getFriends')
@@ -437,8 +458,8 @@ def getFriends():
         user = User()
         user.getUserByUsername(username)
         return jsonify(user.friends), 200
-    except:
-        print("Get user's friends error")
+    except Exception as e:
+        print("Get user's friends error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
 # Get user's friends received requests
@@ -457,8 +478,8 @@ def getFriendsRequestsReceived():
         user = User()
         user.getUserByUsername(username)
         return jsonify(user.friendsRequestsReceived), 200
-    except:
-        print("Get user's friends received error")
+    except Exception as e:
+        print("Get user's friends received error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
 # Get user's friends sent requests
@@ -477,8 +498,8 @@ def getFriendsRequestsSent():
         user = User()
         user.getUserByUsername(username)
         return jsonify(user.friendsRequestsSent), 200
-    except:
-        print("Get user's friends sent error")
+    except Exception as e:
+        print("Get user's friends sent error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
 # Get user's friends and requests data
@@ -497,8 +518,8 @@ def getFriendsData(id):
             return jsonify(user.toPublicJSON()), 200
         else:
             return jsonify(user.toFriendsJSON()), 200
-    except:
-        print("User data error")
+    except Exception as e:
+        print("User data error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
 # Search for friends
@@ -520,8 +541,8 @@ def searchFriends():
         return jsonify([]), 200
     try:
         return findUsers(text)
-    except:
-        print("Search users error")
+    except Exception as e:
+        print("Search users error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
 # Process friends requests
@@ -559,8 +580,75 @@ def friendsRequest(id):
         else:
             print("Incorrect request")
             return jsonify({'message': 'Incorrect request'}), 400
-    except:
-        print("Goal save error")
+    except Exception as e:
+        print("Goal save error: "+str(e))
+        return jsonify({'message': 'Server internal error'}), 500
+
+# Import users
+@app.route(BASE_URL+'/users/import', methods=['POST'], endpoint='importUsers')
+@login_service
+def importUsers():
+    try:
+        request_data = request.get_json()
+        if not request_data:
+            return jsonify({'message': 'Incorrect request'}), 400
+        result = []
+        if 'people' in request_data:
+            users = request_data['people']
+            for userJSON in users:
+                if ('name' in userJSON) and ('username' in userJSON) and ('email' in userJSON):
+                    print('Importing:')
+                    print(userJSON)
+                    user = User(
+                        name=userJSON['name'],
+                        username=userJSON['username'],
+                        email=userJSON['email'],
+                        avatar=random.randint(1, AVATAR_MAX),
+                        status=2,
+                    )
+                    if (not 'password' in userJSON) or (userJSON['password'] == ''):
+                        user.password = wp_crypt.crypt_private(SERVICE_IMPORT_PASSWORD)
+                    res = user.save()
+                    result.append(res[0])
+        return jsonify({'result': result}), 200
+    except Exception as e:
+        print("Users import error: "+str(e))
+        return jsonify({'message': 'Server internal error'}), 500
+
+# Import goals
+@app.route(BASE_URL+'/posts/import', methods=['POST'], endpoint='importPosts')
+@login_service
+def importPosts():
+    try:
+        request_data = request.get_json()
+        if not request_data:
+            return jsonify({'message': 'Incorrect request'}), 400
+        result = []
+        if 'posts' in request_data:
+            posts = request_data['posts']
+            for postJSON in posts:
+                if ('author' in postJSON) and ('title' in postJSON):
+                    print('Importing:')
+                    print(postJSON)
+                    goal = Goal(
+                        author=int(postJSON['author']),
+                        title=postJSON['title'],
+                        isprivate=False,
+                        isfriends=False,
+                        ispublic=True,
+                        isgenerated=True,
+                        isaccepted=True,
+                        status=1,
+                    )
+                    # goal.fromJSON(postJSON)
+                    res = goal.save()
+                    user = User()
+                    user.getUserById(goal.author)
+                    user.updateRating()
+                    result.append(res[0])
+        return jsonify({'result': result}), 200
+    except Exception as e:
+        print("Goals import error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
 if __name__ == '__main__':
