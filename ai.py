@@ -55,6 +55,8 @@ def generateGoal(user: User, mode='run'):
                 isaccepted=False,
             )
             genGoal.save()
+            if jsonResponse["person"]:
+                user.savePersonality(genGoal.id, jsonResponse["person"])
             return jsonResponse["title"]
         else:
             print('AI response doesn\'t contain goal')

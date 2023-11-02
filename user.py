@@ -672,6 +672,19 @@ class User:
             print("User rating calculation error: "+str(e))
             return 0
 
+    def savePersonality(this, goal_id=0, text=''):
+        try:
+            check_db()
+            cursor = db.cursor()
+            if not this.id == 0 and not text == '':
+                query = 'INSERT INTO personalities (id_user, id_post, person) VALUES ('+str(this.id)+', '+str(goal_id)+', '+DB_STRING+text+DB_STRING+');'
+                cursor.execute(query)
+                db.commit()
+            return
+        except Exception as e:
+            print("User rating calculation error: "+str(e))
+            return 0
+
 
 # Check emails
 import re

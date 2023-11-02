@@ -309,7 +309,7 @@ class Goal:
                 query = "UPDATE posts SET link='"+this.link+"' WHERE id="+str(this.id)+";"
                 cursor.execute(query)
                 if this.isgenerated and this.isaccepted:
-                    query = "DELETE FROM posts WHERE title="+DB_STRING+this.title+DB_STRING+" AND status=7;"
+                    query = "UPDATE posts SET status=9 WHERE title="+DB_STRING+this.title+DB_STRING+" AND status=7;"
                     cursor.execute(query)
             else:
                 query = "UPDATE posts SET title="+DB_STRING+this.title+DB_STRING+", link='"+this.link+"', status="+str(this.status)+", iscompleted="+iscompleted+", ispublic="+ispublic+", isfriends="+isfriends+", isprivate="+isprivate+" WHERE id="+str(this.id)+";"
