@@ -454,7 +454,7 @@ class User:
         try:
             check_db()
             cursor = db.cursor()
-            query = "SELECT users.id, users.username, users.name, users.email, users.password, users.url, users.locale, users.date, users.avatar, users.rating FROM users WHERE users.username='"+request_username+"' AND users.status=2 LIMIT 1;"
+            query = "SELECT users.id, users.username, users.name, users.email, users.password, users.url, users.locale, users.date, users.avatar, users.rating FROM users WHERE LOWER(users.username)="+DB_STRING+request_username.lower()+DB_STRING+" AND users.status=2 LIMIT 1;"
             cursor.execute(query)
             res = cursor.fetchone()
             if res:
