@@ -31,6 +31,9 @@ if not AVATAR_MAX:
     AVATAR_MAX = 50
 else:
     AVATAR_MAX = int(AVATAR_MAX)
+LOG_LEVEL = os.getenv('LOG_LEVEL')
+if not LOG_LEVEL:
+    LOG_LEVEL = 'debug'
 
 def open_database_connection():
     try:
@@ -218,6 +221,9 @@ class User:
 
     def getAchievements(this):
         try:
+            if LOG_LEVEL=='debug':
+                print('Getting achievements for a user')
+                print('User: '+str(this.id))
             if not this.id or this.id == 0:
                 return []
             check_db()
@@ -236,6 +242,9 @@ class User:
 
     def setAchievements(this):
         try:
+            if LOG_LEVEL=='debug':
+                print('Setting achievements for a user')
+                print('User: '+str(this.id))
             check_db()
             cursor = db.cursor()
             query = "DELETE FROM achievements WHERE id_user="+str(this.id)+";"
@@ -259,6 +268,9 @@ class User:
 
     def getPaid(this):
         try:
+            if LOG_LEVEL=='debug':
+                print('Getting the paid status for a user')
+                print('User: '+str(this.id))
             if not this.id or this.id == 0:
                 return False
             check_db()
@@ -267,8 +279,12 @@ class User:
             cursor.execute(query)
             res = cursor.fetchall()
             if cursor.rowcount>0:
+                if LOG_LEVEL=='debug':
+                    print('Paid: true')
                 return True
             else:
+                if LOG_LEVEL=='debug':
+                    print('Paid: false')
                 return False
         except Exception as e:
             print("Database get paid status error: "+str(e))
@@ -276,6 +292,9 @@ class User:
 
     def getFriends(this):
         try:
+            if LOG_LEVEL=='debug':
+                print('Getting friends for a user')
+                print('User: '+str(this.id))
             check_db()
             cursor = db.cursor()
             query = "SELECT friends.id_friend, users.username, users.name, users.avatar, users.rating FROM friends, users WHERE friends.id_user="+str(this.id)+" AND friends.id_friend=users.id AND users.status=2;"
@@ -293,6 +312,8 @@ class User:
                             'rating': rating,
                         }
                     })
+            if LOG_LEVEL=='debug':
+                print(friends)
             return friends
         except Exception as e:
             print("Database get friends error: "+str(e))
@@ -300,6 +321,9 @@ class User:
 
     def getFriendsRequestsSent(this):
         try:
+            if LOG_LEVEL=='debug':
+                print('Getting friends requests sent for a user')
+                print('User: '+str(this.id))
             check_db()
             cursor = db.cursor()
             query = "SELECT friends_requests.id, friends_requests.id_status, users.id, users.username, users.name, users.avatar, users.rating FROM friends_requests, users WHERE friends_requests.id_source="+str(this.id)+" AND friends_requests.id_target=users.id AND users.status=2 AND friends_requests.id_status=1 ORDER BY friends_requests DESC;"
@@ -317,6 +341,8 @@ class User:
                             'rating': rating,
                         }
                     })
+            if LOG_LEVEL=='debug':
+                print(friendsRequestsSent)
             return friendsRequestsSent
         except Exception as e:
             print("Database get friends requests sent error: "+str(e))
@@ -324,6 +350,9 @@ class User:
 
     def getFriendsRequestsReceived(this):
         try:
+            if LOG_LEVEL=='debug':
+                print('Getting friends requests received for a user')
+                print('User: '+str(this.id))
             check_db()
             cursor = db.cursor()
             query = "SELECT friends_requests.id, friends_requests.id_status, users.id, users.username, users.name, users.avatar, users.rating FROM friends_requests, users WHERE friends_requests.id_target="+str(this.id)+" AND friends_requests.id_source=users.id AND users.status=2 AND friends_requests.id_status=1 ORDER BY friends_requests DESC;"
@@ -341,6 +370,8 @@ class User:
                             'rating': rating,
                         }
                     })
+            if LOG_LEVEL=='debug':
+                print(friendsRequestsReceived)
             return friendsRequestsReceived
         except Exception as e:
             print("Database get friends requests received error: "+str(e))
@@ -348,6 +379,10 @@ class User:
 
     def acceptFriendsRequest(this, friend_id):
         try:
+            if LOG_LEVEL=='debug':
+                print('Accepting a friend request for a user')
+                print('User: '+str(this.id))
+                print('Friend: '+str(friend_id))
             for friend in this.friends:
                 if friend['id'] == friend_id:
                     check_db()
@@ -379,6 +414,10 @@ class User:
 
     def rejectFriendsRequest(this, friend_id):
         try:
+            if LOG_LEVEL=='debug':
+                print('Rejecting a friend request for a user')
+                print('User: '+str(this.id))
+                print('Friend: '+str(friend_id))
             for friend in this.friends:
                 if friend['id'] == friend_id:
                     this.removeFriend(friend_id)
@@ -400,6 +439,10 @@ class User:
 
     def sendFriendsRequest(this, friend_id):
         try:
+            if LOG_LEVEL=='debug':
+                print('Sending a friend request for a user')
+                print('User: '+str(this.id))
+                print('Friend: '+str(friend_id))
             for friendsRequest in this.friendsRequestsSent:
                 if friendsRequest['id'] == friend_id:
                     return jsonify(this.toFriendsJSON()), 200
@@ -426,9 +469,11 @@ class User:
 
     def removeFriend(this, friend_id):
         try:
-            print(this.friends)
+            if LOG_LEVEL=='debug':
+                print('Removing a friend for a user')
+                print('User: '+str(this.id))
+                print('Friend: '+str(friend_id))
             for friend in this.friends:
-                print(friend)
                 if friend['id'] == friend_id:
                     check_db()
                     cursor = db.cursor()
@@ -452,6 +497,9 @@ class User:
 
     def getUserByUsername(this, request_username):
         try:
+            if LOG_LEVEL=='debug':
+                print('Getting a user by username')
+                print('Username: '+request_username)
             check_db()
             cursor = db.cursor()
             query = "SELECT users.id, users.username, users.name, users.email, users.password, users.url, users.locale, users.date, users.avatar, users.rating FROM users WHERE LOWER(users.username)="+DB_STRING+request_username.lower()+DB_STRING+" AND users.status=2 LIMIT 1;"
@@ -481,6 +529,9 @@ class User:
 
     def getUserById(this, request_id):
         try:
+            if LOG_LEVEL=='debug':
+                print('Getting a user by id')
+                print('Username: '+str(request_id))
             check_db()
             cursor = db.cursor()
             query = "SELECT users.id, users.username, users.name, users.email, users.password, users.url, users.locale, users.date, users.avatar, users.rating FROM users WHERE users.id="+str(request_id)+" AND users.status=2 LIMIT 1;"
@@ -510,6 +561,10 @@ class User:
     
     def save(this):
         try:
+            if LOG_LEVEL=='debug':
+                print('Saving a user')
+                print('Username: '+str(this.username))
+                print('Email: '+str(this.email))
             #Check email format
             if not checkEmail(this.email):
                 res = {
@@ -536,7 +591,8 @@ class User:
             query = "SELECT users.id FROM users WHERE LOWER(users.username)="+DB_STRING+this.username.lower()+DB_STRING+" AND users.status=2 AND NOT users.id="+str(this.id)+" LIMIT 1;"
             cursor.execute(query)
             if cursor.rowcount>0:
-                print('user exists')
+                if LOG_LEVEL=='debug':
+                    print('username exists')
                 res = {
                     'code': 'existing_user_login',
                     'message': 'Sorry, this username is already taken!',
@@ -548,7 +604,8 @@ class User:
             query = "SELECT users.id FROM users WHERE LOWER(users.email)="+DB_STRING+this.email.lower()+DB_STRING+" AND users.status=2 AND NOT users.id="+str(this.id)+" LIMIT 1;"
             cursor.execute(query)
             if cursor.rowcount>0:
-                print('email exists')
+                if LOG_LEVEL=='debug':
+                    print('email exists')
                 res = {
                     'code': 'existing_user_email',
                     'message': 'Sorry, this email address is already used!',
@@ -557,18 +614,24 @@ class User:
                 return jsonify(res), 500
             this.url = SITE_URL+"/author/"+this.username
             if this.id == 0:
+                if LOG_LEVEL=='debug':
+                    print('Registering a new user')
                 this.date = datetime.now()
                 query = "INSERT INTO users (username, name, email, url, locale, date, password, avatar, rating, status) VALUES ("+DB_STRING+this.username+DB_STRING+", "+DB_STRING+this.name+DB_STRING+", "+DB_STRING+this.email+DB_STRING+", "+DB_STRING+this.url+DB_STRING+", "+DB_STRING+this.locale+DB_STRING+", '"+this.date.isoformat(" ", "seconds")+"', "+DB_STRING+this.password+DB_STRING+", "+str(this.avatar)+", "+str(this.rating)+", 2) RETURNING id;"
                 cursor.execute(query)
                 this.id = cursor.fetchone()[0]
                 this.initialInvite()
             else:
+                if LOG_LEVEL=='debug':
+                    print('Updating an existing user')
                 this.rating = this.calculateRating()
                 query = "UPDATE users SET username="+DB_STRING+this.username+DB_STRING+", name="+DB_STRING+this.name+DB_STRING+", email="+DB_STRING+this.email+DB_STRING+", url="+DB_STRING+this.url+DB_STRING+", password="+DB_STRING+this.password+DB_STRING+", avatar="+str(this.avatar)+", rating="+str(this.rating)+" WHERE id="+str(this.id)+";"
                 cursor.execute(query)
                 this.setAchievements()
             db.commit()
-            print('user save successful')
+            if LOG_LEVEL=='debug':
+                print('User id: '+str(this.id))
+                print(this.toJSON())
             return jsonify(this.toJSON()), 200
         except Exception as e:
             print("User save error: "+str(e))
@@ -581,6 +644,9 @@ class User:
 
     def delete(this):
         try:
+            if LOG_LEVEL=='debug':
+                print('Deleting a user')
+                print('User: '+str(this.id))
             check_db()
             cursor = db.cursor()
             #query = "DELETE FROM users WHERE id="+this.id+";"
@@ -606,6 +672,9 @@ class User:
 
     def initialInvite(this):
         try:
+            if LOG_LEVEL=='debug':
+                print('Creating an initial friend request')
+                print('User: '+str(this.id))        
             check_db()
             cursor = db.cursor()
             date = datetime.now()
@@ -625,6 +694,9 @@ class User:
         
     def updateRating(this):
         try:
+            if LOG_LEVEL=='debug':
+                print('Updating a rating in a database')
+                print('User: '+str(this.id))
             this.rating = this.calculateRating()
             if this.id != 0:
                 check_db()
@@ -632,7 +704,7 @@ class User:
                 query = "UPDATE users SET rating="+str(this.rating)+" WHERE id="+str(this.id)+";"
                 cursor.execute(query)
                 db.commit()
-            print('user rating update successful')
+            # print('user rating update successful')
             return
         except Exception as e:
             print("User rating update error: "+str(e))
@@ -645,6 +717,10 @@ class User:
 
     def calculateRating(this):
         try:
+            if LOG_LEVEL=='debug':
+                print('Calculating a rating')
+                print('User: '+str(this.id))
+                print('Rating before update: '+str(this.rating))
             check_db()
             cursor = db.cursor()
             query = "SELECT count(posts.id) FROM posts WHERE posts.author="+str(this.id)+" AND posts.status=1;"
@@ -667,6 +743,8 @@ class User:
             friendsRequestsSent = len(this.friendsRequestsSent)
             achievements = len(this.achievements)
             rating = goals + goalsCompleted*3 + friends*7 + achievements*37 + friendsRequestsSent
+            if LOG_LEVEL=='debug':
+                print('Updated rating: '+str(rating))
             return rating
         except Exception as e:
             print("User rating calculation error: "+str(e))
@@ -674,6 +752,11 @@ class User:
 
     def savePersonality(this, goal_id=0, text=''):
         try:
+            if LOG_LEVEL=='debug':
+                print('Saving a personality')
+                print('User: '+str(this.id))
+                print('Goal: '+str(goal_id))
+                print(text)
             check_db()
             cursor = db.cursor()
             if not this.id == 0 and not text == '':
@@ -720,6 +803,9 @@ def check_auth_service(username, password):
 
 def findUsers(request_string):
     try:
+        if LOG_LEVEL=='debug':
+            print('Searching for users')
+            print('Search string: '+request_string)
         check_db()
         cursor = db.cursor()
         query = "SELECT users.id, users.username, users.name, users.email, users.url, users.date, users.avatar, users.rating FROM users WHERE (LOWER(users.name) LIKE "+DB_STRING+"%"+str(request_string)+"%"+DB_STRING+" OR LOWER(users.username) LIKE "+DB_STRING+"%"+str(request_string)+"%"+DB_STRING+") AND users.status=2 LIMIT "+str(DB_SEARCH_LIMIT)+";"
@@ -750,6 +836,9 @@ def findUsers(request_string):
 
 def getPublicUserById(request_id):
     try:
+        if LOG_LEVEL=='debug':
+            print('Requesting public user data')
+            print('User: '+str(request_id))
         check_db()
         cursor = db.cursor()
         query = "SELECT users.id, users.username, users.name, users.email, users.url, users.date, users.avatar, users.rating FROM users WHERE users.id="+str(request_id)+" AND users.status=2 LIMIT 1;"
@@ -763,6 +852,8 @@ def getPublicUserById(request_id):
             public.avatar = avatar
             public.rating = rating
         public.getAchievements()
+        if LOG_LEVEL=='debug':
+            print(public.toJSON)
         return jsonify(public), 200
 
     except Exception as e:

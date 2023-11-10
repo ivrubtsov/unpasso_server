@@ -30,6 +30,9 @@ if not OPENAI_GOALS_LIMIT_ALL:
 else:
     OPENAI_GOALS_LIMIT_ALL = int(OPENAI_GOALS_LIMIT_ALL)
 SITE_URL = os.getenv('SITE_URL')
+LOG_LEVEL = os.getenv('LOG_LEVEL')
+if not LOG_LEVEL:
+    LOG_LEVEL = 'debug'
 
 def open_database_connection():
     try:
@@ -196,6 +199,10 @@ class Goal:
 
     def getLikes(this):
         try:
+            if LOG_LEVEL=='debug':
+                print('Getting likes for a goal')
+                print('Author: '+str(this.author))
+                print('Goal: '+str(this.id))
             check_db()
             cursor = db.cursor()
             query = "SELECT id_user FROM likes WHERE id_post="+str(this.id)+";"
@@ -214,6 +221,11 @@ class Goal:
 
     def addLike(this, id_user):
         try:
+            if LOG_LEVEL=='debug':
+                print('Adding a like for a goal')
+                print('Author: '+str(this.author))
+                print('Goal: '+str(this.id))
+                print('User: '+str(id_user))
             this.getLikes()
             if not id_user in this.likeUsers:
                 check_db()
@@ -230,6 +242,11 @@ class Goal:
 
     def removeLike(this, id_user):
         try:
+            if LOG_LEVEL=='debug':
+                print('Removing a like for a goal')
+                print('Author: '+str(this.author))
+                print('Goal: '+str(this.id))
+                print('User: '+str(id_user))
             this.getLikes()
             if id_user in this.likeUsers:
                 check_db()
@@ -246,6 +263,9 @@ class Goal:
 
     def getGoalById(this, request_id):
         try:
+            if LOG_LEVEL=='debug':
+                print('Looking for a goal by id')
+                print('Goal: '+str(request_id))
             check_db()
             cursor = db.cursor()
             query = "SELECT posts.id, posts.author, posts.date, posts.title, posts.link, posts.status, posts.iscompleted, posts.ispublic, posts.isfriends, posts.isprivate, posts.isgenerated, posts.isaccepted FROM posts WHERE posts.id="+str(request_id)+" AND posts.status=1 ORDER BY posts.date DESC LIMIT 1;"
@@ -301,10 +321,16 @@ class Goal:
             check_db()
             cursor = db.cursor()
             if this.id == 0:
+                if LOG_LEVEL=='debug':
+                    print('Creating a goal')
+                    print('Author: '+str(this.author))
+                    print(this.toJSON())
                 # this.date = datetime.now()
                 query = "INSERT INTO posts (author, date, title, link, status, iscompleted, ispublic, isfriends, isprivate, isgenerated, isaccepted) VALUES ("+str(this.author)+", '"+this.date.isoformat(" ", "seconds")+"', "+DB_STRING+this.title+DB_STRING+", '', "+str(this.status)+", "+iscompleted+", "+ispublic+", "+isfriends+", "+isprivate+", "+isgenerated+", "+isaccepted+") RETURNING id;"
                 cursor.execute(query)
                 this.id = cursor.fetchone()[0]
+                if LOG_LEVEL=='debug':
+                    print('Goal: '+str(this.id))
                 this.link = SITE_URL+'/?p='+str(this.id)
                 query = "UPDATE posts SET link='"+this.link+"' WHERE id="+str(this.id)+";"
                 cursor.execute(query)
@@ -312,9 +338,16 @@ class Goal:
                     query = "UPDATE posts SET status=9 WHERE title="+DB_STRING+this.title+DB_STRING+" AND status=7;"
                     cursor.execute(query)
             else:
+                if LOG_LEVEL=='debug':
+                    print('Updating a goal')
+                    print('Author: '+str(this.author))
+                    print('Goal: '+str(this.id))
+                    print(this.toJSON())
                 query = "UPDATE posts SET title="+DB_STRING+this.title+DB_STRING+", link='"+this.link+"', status="+str(this.status)+", iscompleted="+iscompleted+", ispublic="+ispublic+", isfriends="+isfriends+", isprivate="+isprivate+" WHERE id="+str(this.id)+";"
                 cursor.execute(query)
             db.commit()
+            if LOG_LEVEL=='debug':
+                print('Goal is saved')
             return jsonify(this.toJSON()), 200
         except Exception as e:
             print("Post save error: "+str(e))
@@ -327,6 +360,10 @@ class Goal:
 
     def delete(this):
         try:
+            if LOG_LEVEL=='debug':
+                print('Deleting a goal')
+                print('Author: '+str(this.author))
+                print('Goal: '+str(this.id))
             check_db()
             cursor = db.cursor()
             this.status = 6
@@ -345,6 +382,10 @@ class Goal:
 
 def getPersonalUserGoals(user_id, page, per_page):
     try:
+        if LOG_LEVEL=='debug':
+            print('Getting personal goals for a user')
+            print('User: '+str(user_id))
+            print('Page/per page: '+str(page)+'/'+str(per_page))
         if page:
             page = int(page)
             if page < 1:
@@ -395,6 +436,10 @@ def getPersonalUserGoals(user_id, page, per_page):
 
 def getAvailableGoals(user_id, page, per_page):
     try:
+        if LOG_LEVEL=='debug':
+            print('Getting available goals for a user')
+            print('User: '+str(user_id))
+            print('Page/per page: '+str(page)+'/'+str(per_page))
         if page:
             page = int(page)
             if page < 1:
@@ -443,6 +488,9 @@ def getAvailableGoals(user_id, page, per_page):
 
 def aiGetUserGoals(user_id):
     try:
+        if LOG_LEVEL=='debug':
+            print('Getting goals for a user to use in the AI generator')
+            print('User: '+str(user_id))
         check_db()
         cursor = db.cursor()
         # query = "SELECT posts.date, posts.title, posts.iscompleted, posts.isgenerated, posts.isaccepted FROM posts WHERE posts.author="+str(user_id)+" AND (posts.status=1 OR posts.status=7) ORDER BY posts.date DESC LIMIT "+str(OPENAI_GOALS_LIMIT_PERSONAL)+";"
@@ -460,6 +508,8 @@ def aiGetUserGoals(user_id):
                     'isaccepted': isaccepted,
                 }
                 goals.append(goal)
+        if LOG_LEVEL=='debug':
+            print(goals)
         return goals
     except Exception as e:
         print("Get user's goals for AI error: "+str(e))
@@ -467,6 +517,8 @@ def aiGetUserGoals(user_id):
 
 def aiGetAllGoals():
     try:
+        if LOG_LEVEL=='debug':
+            print('Getting all available goals for AI generator')
         check_db()
         cursor = db.cursor()
         query = "SELECT posts.date, posts.title, posts.iscompleted, posts.isgenerated, posts.isaccepted FROM posts WHERE (posts.status=1 OR posts.status=7) ORDER BY posts.date DESC LIMIT "+str(OPENAI_GOALS_LIMIT_ALL)+";"
@@ -483,6 +535,8 @@ def aiGetAllGoals():
                     'isaccepted': isaccepted,
                 }
                 goals.append(goal)
+        if LOG_LEVEL=='debug':
+            print(goals)
         return goals
     except Exception as e:
         print("Get all users' goals for AI error: "+str(e))

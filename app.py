@@ -23,6 +23,9 @@ if not AVATAR_MAX:
     AVATAR_MAX = 50
 else:
     AVATAR_MAX = int(AVATAR_MAX)
+LOG_LEVEL = os.getenv('LOG_LEVEL')
+if not LOG_LEVEL:
+    LOG_LEVEL = 'debug'
 
 app = Flask(__name__)
 
