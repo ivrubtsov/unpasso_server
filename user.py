@@ -312,8 +312,6 @@ class User:
                             'rating': rating,
                         }
                     })
-            if LOG_LEVEL=='debug':
-                print(friends)
             return friends
         except Exception as e:
             print("Database get friends error: "+str(e))
@@ -341,8 +339,6 @@ class User:
                             'rating': rating,
                         }
                     })
-            if LOG_LEVEL=='debug':
-                print(friendsRequestsSent)
             return friendsRequestsSent
         except Exception as e:
             print("Database get friends requests sent error: "+str(e))
@@ -370,8 +366,6 @@ class User:
                             'rating': rating,
                         }
                     })
-            if LOG_LEVEL=='debug':
-                print(friendsRequestsReceived)
             return friendsRequestsReceived
         except Exception as e:
             print("Database get friends requests received error: "+str(e))
@@ -631,7 +625,6 @@ class User:
             db.commit()
             if LOG_LEVEL=='debug':
                 print('User id: '+str(this.id))
-                print(this.toJSON())
             return jsonify(this.toJSON()), 200
         except Exception as e:
             print("User save error: "+str(e))

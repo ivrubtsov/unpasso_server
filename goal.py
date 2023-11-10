@@ -324,7 +324,6 @@ class Goal:
                 if LOG_LEVEL=='debug':
                     print('Creating a goal')
                     print('Author: '+str(this.author))
-                    print(this.toJSON())
                 # this.date = datetime.now()
                 query = "INSERT INTO posts (author, date, title, link, status, iscompleted, ispublic, isfriends, isprivate, isgenerated, isaccepted) VALUES ("+str(this.author)+", '"+this.date.isoformat(" ", "seconds")+"', "+DB_STRING+this.title+DB_STRING+", '', "+str(this.status)+", "+iscompleted+", "+ispublic+", "+isfriends+", "+isprivate+", "+isgenerated+", "+isaccepted+") RETURNING id;"
                 cursor.execute(query)
@@ -342,7 +341,6 @@ class Goal:
                     print('Updating a goal')
                     print('Author: '+str(this.author))
                     print('Goal: '+str(this.id))
-                    print(this.toJSON())
                 query = "UPDATE posts SET title="+DB_STRING+this.title+DB_STRING+", link='"+this.link+"', status="+str(this.status)+", iscompleted="+iscompleted+", ispublic="+ispublic+", isfriends="+isfriends+", isprivate="+isprivate+" WHERE id="+str(this.id)+";"
                 cursor.execute(query)
             db.commit()
