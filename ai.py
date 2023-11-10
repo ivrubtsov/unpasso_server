@@ -13,19 +13,12 @@ if not LOG_LEVEL:
     LOG_LEVEL = 'debug'
 
 def get_completion(prompt, model="gpt-3.5-turbo"):
-    messages = [{"role": "user", "content": prompt}]
-    if LOG_LEVEL=='debug':
-        print('Asking a generative AI for an answer')
-        print('Request: ')
-        print(messages)
+    messages = [{"role": "user", "response_format": { "type": "json_object" }, "content": prompt}]
     response = openai.ChatCompletion.create(
         model=model,
         messages=messages,
         temperature=float(os.getenv('OPENAI_TEMPERATURE')), # this is the degree of randomness of the model's output
     )
-    if LOG_LEVEL=='debug':
-        print('Reply: ')
-        print(response)
     return response.choices[0].message["content"]
 
 def generateGoal(user: User, mode='run'):
@@ -35,8 +28,8 @@ def generateGoal(user: User, mode='run'):
         goals = aiGetUserGoals(user.id)
     if LOG_LEVEL=='debug':
         print('Generating a goal for a user')
-        print('Goals: ')
-        print(goals)
+        # print('Goals: ')
+        # print(goals)
     if goals:
         prompt = gen_prompt(goals, isnew=False)
     elif mode=='run':
