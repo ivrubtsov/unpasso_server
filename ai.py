@@ -65,7 +65,7 @@ def generateGoal(user: User, mode='run'):
             print('GenAI user '+str(user.id))
             print(response)
             jsonResponse = ''
-        if jsonResponse["title"]:
+        if 'title' in jsonResponse:
             if LOG_LEVEL=='debug':
                 print('Response contains a title')
             genGoal = Goal(
@@ -79,10 +79,10 @@ def generateGoal(user: User, mode='run'):
                 isaccepted=False,
             )
             genGoal.save()
-            if jsonResponse["person"]:
-                if LOG_LEVEL=='debug':
-                    print('JSON contains a personality')
-                user.savePersonality(genGoal.id, jsonResponse["person"])
+            # if 'person' in jsonResponse:
+            #     if LOG_LEVEL=='debug':
+            #         print('JSON contains a personality')
+            #     user.savePersonality(genGoal.id, jsonResponse["person"])
             return jsonResponse["title"]
         else:
             print('AI response doesn\'t contain goal')

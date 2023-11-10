@@ -491,8 +491,8 @@ def aiGetUserGoals(user_id):
             print('User: '+str(user_id))
         check_db()
         cursor = db.cursor()
-        # query = "SELECT posts.date, posts.title, posts.iscompleted, posts.isgenerated, posts.isaccepted FROM posts WHERE posts.author="+str(user_id)+" AND (posts.status=1 OR posts.status=7) ORDER BY posts.date DESC LIMIT "+str(OPENAI_GOALS_LIMIT_PERSONAL)+";"
-        query = "SELECT posts.date, posts.title, posts.iscompleted, posts.isgenerated, posts.isaccepted FROM posts WHERE posts.author="+str(user_id)+" AND (posts.status=1) ORDER BY posts.date DESC LIMIT "+str(OPENAI_GOALS_LIMIT_PERSONAL)+";"
+        query = "SELECT posts.date, posts.title, posts.iscompleted, posts.isgenerated, posts.isaccepted FROM posts WHERE posts.author="+str(user_id)+" AND (posts.status=1 OR posts.status=7) ORDER BY posts.date DESC LIMIT "+str(OPENAI_GOALS_LIMIT_PERSONAL)+";"
+        # query = "SELECT posts.date, posts.title, posts.iscompleted, posts.isgenerated, posts.isaccepted FROM posts WHERE posts.author="+str(user_id)+" AND (posts.status=1) ORDER BY posts.date DESC LIMIT "+str(OPENAI_GOALS_LIMIT_PERSONAL)+";"
         cursor.execute(query)
         res = cursor.fetchall()
         goals = []
