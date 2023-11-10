@@ -13,7 +13,7 @@ if not LOG_LEVEL:
     LOG_LEVEL = 'debug'
 
 def get_completion(prompt, model="gpt-3.5-turbo"):
-    messages = [{"role": "user", "response_format": { "type": "json_object" }, "content": prompt}]
+    messages = [{"role": "user", "content": prompt}]
     response = openai.ChatCompletion.create(
         model=model,
         messages=messages,
