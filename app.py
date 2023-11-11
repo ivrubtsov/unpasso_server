@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from functools import wraps
 import os
 import random
+from datetime import datetime
 import wp_crypt
 from dotenv import load_dotenv
 from user import User, check_auth, check_auth_service, getPublicUserById, findUsers
@@ -603,6 +604,7 @@ def importUsers():
                     print('Importing:')
                     print(userJSON)
                     user = User(
+                        date=datetime.now(),
                         name=userJSON['name'],
                         username=userJSON['username'],
                         email=userJSON['email'],
@@ -635,6 +637,7 @@ def importPosts():
                     print(postJSON)
                     goal = Goal(
                         author=int(postJSON['author']),
+                        date=datetime.now(),
                         title=postJSON['title'],
                         isprivate=False,
                         isfriends=False,
