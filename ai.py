@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from dotenv import load_dotenv
 import json
 import openai
@@ -63,6 +64,7 @@ def generateGoal(user: User, mode='run'):
                 print('Response contains a title')
             genGoal = Goal(
                 author=user.id,
+                date = datetime.now(),
                 title=jsonResponse["title"],
                 status=7,
                 ispublic=False,
