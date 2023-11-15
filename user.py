@@ -264,6 +264,9 @@ class User:
             return
         except Exception as e:
             print("Database set achievements request error: "+str(e))
+            cursor = db.cursor()
+            cursor.execute("ROLLBACK")
+            db.commit()
             return
 
     def getPaid(this):
@@ -399,6 +402,9 @@ class User:
             return jsonify(this.toFriendsJSON()), 200
         except Exception as e:
             print("Database accept friends request error: "+str(e))
+            cursor = db.cursor()
+            cursor.execute("ROLLBACK")
+            db.commit()
             res = {
                 "code": "friends_accept_error",
                 "message": "Unknown error. Please, try again later",
@@ -424,6 +430,9 @@ class User:
             return jsonify(this.toFriendsJSON()), 200
         except Exception as e:
             print("Database reject friend request error: "+str(e))
+            cursor = db.cursor()
+            cursor.execute("ROLLBACK")
+            db.commit()
             res = {
                 "code": "friends_reject_error",
                 "message": "Unknown error. Please, try again later",
@@ -628,6 +637,9 @@ class User:
             return jsonify(this.toJSON()), 200
         except Exception as e:
             print("User save error: "+str(e))
+            cursor = db.cursor()
+            cursor.execute("ROLLBACK")
+            db.commit()
             res = {
                 "code": "user_save_error",
                 "message": "Unknown error. Please, try again later",
@@ -656,6 +668,9 @@ class User:
             return jsonify(this.toJSON()), 200
         except Exception as e:
             print("User delete error: "+str(e))
+            cursor = db.cursor()
+            cursor.execute("ROLLBACK")
+            db.commit()
             res = {
                 "code": "user_delete_error",
                 "message": "Unknown error. Please, try again later",
@@ -678,6 +693,9 @@ class User:
             return
         except Exception as e:
             print("User Initial invite error: "+str(e))
+            cursor = db.cursor()
+            cursor.execute("ROLLBACK")
+            db.commit()
             res = {
                 "code": "user_initial_error",
                 "message": "Unknown error. Please, try again later",
@@ -701,6 +719,9 @@ class User:
             return
         except Exception as e:
             print("User rating update error: "+str(e))
+            cursor = db.cursor()
+            cursor.execute("ROLLBACK")
+            db.commit()
             res = {
                 "code": "user_rating_update_error",
                 "message": "Unknown error. Please, try again later",
@@ -759,6 +780,9 @@ class User:
             return
         except Exception as e:
             print("User rating calculation error: "+str(e))
+            cursor = db.cursor()
+            cursor.execute("ROLLBACK")
+            db.commit()
             return 0
 
 

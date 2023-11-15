@@ -238,6 +238,9 @@ class Goal:
             return
         except Exception as e:
             print("Database add like request error: "+str(e))
+            cursor = db.cursor()
+            cursor.execute("ROLLBACK")
+            db.commit()
             return
 
     def removeLike(this, id_user):
@@ -259,6 +262,9 @@ class Goal:
             return
         except Exception as e:
             print("Database remove like request error: "+str(e))
+            cursor = db.cursor()
+            cursor.execute("ROLLBACK")
+            db.commit()
             return
 
     def getGoalById(this, request_id):
@@ -349,6 +355,9 @@ class Goal:
             return jsonify(this.toJSON()), 200
         except Exception as e:
             print("Post save error: "+str(e))
+            cursor = db.cursor()
+            cursor.execute("ROLLBACK")
+            db.commit()
             res = {
                 "code": "post_save_error",
                 "message": "Unknown error. Please, try again later",
@@ -371,6 +380,9 @@ class Goal:
             return jsonify(this.toJSON()), 200
         except Exception as e:
             print("Post delete error: "+str(e))
+            cursor = db.cursor()
+            cursor.execute("ROLLBACK")
+            db.commit()
             res = {
                 "code": "post_delete_error",
                 "message": "Unknown error. Please, try again later",
