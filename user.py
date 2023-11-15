@@ -324,7 +324,7 @@ class User:
                 print('User: '+str(this.id))
             check_db()
             cursor = db.cursor()
-            query = "SELECT friends_requests.id, friends_requests.id_status, users.id, users.username, users.name, users.avatar, users.rating FROM friends_requests, users WHERE friends_requests.id_source="+str(this.id)+" AND friends_requests.id_target=users.id AND users.status=2 AND friends_requests.id_status=1 ORDER BY friends_requests DESC;"
+            query = "SELECT friends_requests.id, friends_requests.status, users.id, users.username, users.name, users.avatar, users.rating FROM friends_requests, users WHERE friends_requests.id_source="+str(this.id)+" AND friends_requests.id_target=users.id AND users.status=2 AND friends_requests.status=1 ORDER BY friends_requests.id ASC;"
             cursor.execute(query)
             res = cursor.fetchall()
             friendsRequestsSent = []
@@ -351,7 +351,7 @@ class User:
                 print('User: '+str(this.id))
             check_db()
             cursor = db.cursor()
-            query = "SELECT friends_requests.id, friends_requests.id_status, users.id, users.username, users.name, users.avatar, users.rating FROM friends_requests, users WHERE friends_requests.id_target="+str(this.id)+" AND friends_requests.id_source=users.id AND users.status=2 AND friends_requests.id_status=1 ORDER BY friends_requests DESC;"
+            query = "SELECT friends_requests.id, friends_requests.status, users.id, users.username, users.name, users.avatar, users.rating FROM friends_requests, users WHERE friends_requests.id_target="+str(this.id)+" AND friends_requests.id_source=users.id AND users.status=2 AND friends_requests.status=1 ORDER BY friends_requests.id ASC;"
             cursor.execute(query)
             res = cursor.fetchall()
             friendsRequestsReceived = []
@@ -381,7 +381,7 @@ class User:
                 if friend['id'] == friend_id:
                     check_db()
                     cursor = db.cursor()
-                    query = "UPDATE friends_requests SET id_status=2 WHERE id_source="+str(friend_id)+" AND id_target="+str(this.id)+";"
+                    query = "UPDATE friends_requests SET status=2 WHERE id_source="+str(friend_id)+" AND id_target="+str(this.id)+";"
                     cursor.execute(query)
                     db.commit()
                     this.friendsRequestsReceived = this.getFriendsRequestsReceived()
@@ -390,7 +390,7 @@ class User:
             cursor = db.cursor()
             query = "INSERT INTO friends (id_user, id_friend) VALUES ("+str(this.id)+", "+str(friend_id)+"), ("+str(friend_id)+", "+str(this.id)+");"
             cursor.execute(query)
-            query = "UPDATE friends_requests SET id_status=2 WHERE id_source="+str(friend_id)+" AND id_target="+str(this.id)+";"
+            query = "UPDATE friends_requests SET status=2 WHERE id_source="+str(friend_id)+" AND id_target="+str(this.id)+";"
             cursor.execute(query)
             db.commit()
             this.friends = this.getFriends()
@@ -417,7 +417,7 @@ class User:
                     this.removeFriend(friend_id)
             check_db()
             cursor = db.cursor()
-            query = "UPDATE friends_requests SET id_status=3 WHERE id_source="+str(friend_id)+" AND id_target="+str(this.id)+";"
+            query = "UPDATE friends_requests SET status=3 WHERE id_source="+str(friend_id)+" AND id_target="+str(this.id)+";"
             cursor.execute(query)
             db.commit()
             this.friendsRequestsReceived = this.getFriendsRequestsReceived()
@@ -446,7 +446,7 @@ class User:
             check_db()
             cursor = db.cursor()
             date = datetime.now()
-            query = "INSERT INTO friends_requests (id_source, id_target, id_status, date) VALUES ("+str(this.id)+", "+str(friend_id)+", 1, '"+date.isoformat(" ", "seconds")+"');"
+            query = "INSERT INTO friends_requests (id_source, id_target, status, date) VALUES ("+str(this.id)+", "+str(friend_id)+", 1, '"+date.isoformat(" ", "seconds")+"');"
             cursor.execute(query)
             db.commit()
             this.friendsRequestsSent = this.getFriendsRequestsSent()
@@ -671,7 +671,7 @@ class User:
             check_db()
             cursor = db.cursor()
             date = datetime.now()
-            query = "INSERT INTO friends_requests (id_source, id_target, id_status, date) VALUES ("+str(MASTER_USER)+", "+str(this.id)+", 1, '"+date.isoformat(" ", "seconds")+"');"
+            query = "INSERT INTO friends_requests (id_source, id_target, status, date) VALUES ("+str(MASTER_USER)+", "+str(this.id)+", 1, '"+date.isoformat(" ", "seconds")+"');"
             cursor.execute(query)
             db.commit()
             this.friendsRequestsSent = this.getFriendsRequestsSent()
