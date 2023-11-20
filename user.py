@@ -300,7 +300,7 @@ class User:
                 print('User: '+str(this.id))
             check_db()
             cursor = db.cursor()
-            query = "SELECT friends.id_friend, users.username, users.name, users.avatar, users.rating FROM friends, users WHERE friends.id_user="+str(this.id)+" AND friends.id_friend=users.id AND users.status=2;"
+            query = "SELECT friends.id_friend, users.username, users.name, users.avatar, users.rating FROM friends, users WHERE friends.id_user="+str(this.id)+" AND friends.id_friend=users.id AND users.status=2 ORDER BY users.name ASC;"
             cursor.execute(query)
             res = cursor.fetchall()
             friends = []
