@@ -327,7 +327,7 @@ class User:
                 print('User: '+str(this.id))
             check_db()
             cursor = db.cursor()
-            query = "SELECT friends_requests.id, friends_requests.status, users.id, users.username, users.name, users.avatar, users.rating FROM friends_requests, users WHERE friends_requests.id_source="+str(this.id)+" AND friends_requests.id_target=users.id AND users.status=2 AND friends_requests.status=1 ORDER BY friends_requests.id ASC;"
+            query = "SELECT friends_requests.id, friends_requests.status, users.id, users.username, users.name, users.avatar, users.rating FROM friends_requests, users WHERE friends_requests.id_source="+str(this.id)+" AND friends_requests.id_target=users.id AND users.status=2 AND friends_requests.status=1 ORDER BY friends_requests.id DESC;"
             cursor.execute(query)
             res = cursor.fetchall()
             friendsRequestsSent = []
@@ -354,7 +354,7 @@ class User:
                 print('User: '+str(this.id))
             check_db()
             cursor = db.cursor()
-            query = "SELECT friends_requests.id, friends_requests.status, users.id, users.username, users.name, users.avatar, users.rating FROM friends_requests, users WHERE friends_requests.id_target="+str(this.id)+" AND friends_requests.id_source=users.id AND users.status=2 AND friends_requests.status=1 ORDER BY friends_requests.id ASC;"
+            query = "SELECT friends_requests.id, friends_requests.status, users.id, users.username, users.name, users.avatar, users.rating FROM friends_requests, users WHERE friends_requests.id_target="+str(this.id)+" AND friends_requests.id_source=users.id AND users.status=2 AND friends_requests.status=1 ORDER BY friends_requests.id DESC;"
             cursor.execute(query)
             res = cursor.fetchall()
             friendsRequestsReceived = []
