@@ -279,10 +279,10 @@ def getUserGoals():
                 print("Wrong request to get other user's goals")
                 return jsonify({'message': 'Unable to update data of other users'}), 403
             else:
-                return getPersonalUserGoals(author, page, per_page)
+                return getPersonalUserGoals(user, page, per_page)
         else:
             user.getUserByUsername(username)
-            return getAvailableGoals(user.id, page, per_page)
+            return getAvailableGoals(user, page, per_page)
     except Exception as e:
         print("Get user's goals error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500

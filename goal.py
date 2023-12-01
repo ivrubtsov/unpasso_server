@@ -155,7 +155,7 @@ class Goal:
                 this.status = 6
         return
 
-    def toJSON(this):
+    def toJSON(this, user):
         if this.iscompleted:
             tags = [8]
         else:
@@ -173,11 +173,12 @@ class Goal:
         
         this.date = this.date.replace(tzinfo=None)
 
-        user = User()
-        user.getUserById(this.author)
-        friendsIds = []
-        for friend in user.friends:
-            friendsIds.append(friend['id'])
+        if not user:
+            user = User()
+            user.getUserById(this.author)
+            friendsIds = []
+            for friend in user.friends:
+                friendsIds.append(friend['id'])
 
         description = {
             'authorName': user.name,
@@ -390,11 +391,11 @@ class Goal:
             }
             return jsonify(res), 500
 
-def getPersonalUserGoals(user_id, page, per_page):
+def getPersonalUserGoals(user, page, per_page):
     try:
         if LOG_LEVEL=='debug':
             print('Getting personal goals for a user')
-            print('User: '+str(user_id))
+            print('User: '+str(user.id))
             print('Page/per page: '+str(page)+'/'+str(per_page))
         if page:
             page = int(page)
@@ -411,7 +412,7 @@ def getPersonalUserGoals(user_id, page, per_page):
         check_db()
         cursor = db.cursor()
         offset = per_page * (page - 1)
-        query = "SELECT posts.id, posts.author, posts.date, posts.title, posts.link, posts.status, posts.iscompleted, posts.ispublic, posts.isfriends, posts.isprivate, posts.isgenerated, posts.isaccepted FROM posts WHERE posts.author="+str(user_id)+" AND posts.status=1 ORDER BY posts.date DESC LIMIT "+str(per_page)+" OFFSET "+str(offset)+";"
+        query = "SELECT posts.id, posts.author, posts.date, posts.title, posts.link, posts.status, posts.iscompleted, posts.ispublic, posts.isfriends, posts.isprivate, posts.isgenerated, posts.isaccepted FROM posts WHERE posts.author="+str(user.id)+" AND posts.status=1 ORDER BY posts.date DESC LIMIT "+str(per_page)+" OFFSET "+str(offset)+";"
         cursor.execute(query)
         res = cursor.fetchall()
         goals = []
@@ -433,7 +434,7 @@ def getPersonalUserGoals(user_id, page, per_page):
                     isaccepted,
                 )
                 goal.getLikes()
-                goals.append(goal.toJSON())
+                goals.append(goal.toJSON(user))
         return jsonify(goals), 200
     except Exception as e:
         print("Get user's goals error: "+str(e))
@@ -444,11 +445,11 @@ def getPersonalUserGoals(user_id, page, per_page):
         }
         return jsonify(res), 500
 
-def getAvailableGoals(user_id, page, per_page):
+def getAvailableGoals(user, page, per_page):
     try:
         if LOG_LEVEL=='debug':
             print('Getting available goals for a user')
-            print('User: '+str(user_id))
+            print('User: '+str(user.id))
             print('Page/per page: '+str(page)+'/'+str(per_page))
         if page:
             page = int(page)
@@ -465,7 +466,7 @@ def getAvailableGoals(user_id, page, per_page):
         offset = per_page * (page - 1)
         check_db()
         cursor = db.cursor()
-        query = "SELECT DISTINCT posts.id, posts.author, posts.date, posts.title, posts.link, posts.status, posts.iscompleted, posts.ispublic, posts.isfriends, posts.isprivate FROM posts, friends WHERE ((posts.ispublic=TRUE OR (posts.author=friends.id_user AND friends.id_friend="+str(user_id)+" AND posts.isfriends=TRUE)) AND posts.status=1 AND NOT posts.author="+str(user_id)+") ORDER BY posts.date DESC LIMIT "+str(per_page)+" OFFSET "+str(offset)+";"
+        query = "SELECT DISTINCT posts.id, posts.author, posts.date, posts.title, posts.link, posts.status, posts.iscompleted, posts.ispublic, posts.isfriends, posts.isprivate FROM posts, friends WHERE ((posts.ispublic=TRUE OR (posts.author=friends.id_user AND friends.id_friend="+str(user.id)+" AND posts.isfriends=TRUE)) AND posts.status=1 AND NOT posts.author="+str(user.id)+") ORDER BY posts.date DESC LIMIT "+str(per_page)+" OFFSET "+str(offset)+";"
         cursor.execute(query)
         res = cursor.fetchall()
         goals = []
