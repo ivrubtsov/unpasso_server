@@ -276,14 +276,13 @@ class Goal:
             if cursor.rowcount>0:
                 (id, date, title, link, status, iscompleted, ispublic, isfriends, isprivate, isgenerated, isaccepted, userid, userUsername, userName, userAvatar, userRating) = res
                 this.id = id
-                user = User(
+                this.user = User(
                     id=userid,
                     name=userName,
                     username=userUsername,
                     avatar=userAvatar,
                     rating=userRating
                     )
-                this.user = user
                 #this.date = datetime.fromisoformat(date)
                 this.date = date
                 this.title = title
