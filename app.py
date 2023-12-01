@@ -240,7 +240,7 @@ def createGoal():
             goal.fromJSON(request_data)
             res = goal.save()
             user = User()
-            user.getUserById(goal.author)
+            user.getUserById(goal.user.id)
             user.updateRating()
             return res
         else:
@@ -309,7 +309,7 @@ def updateGoal(id):
         user.getUserByUsername(username)
         if goal.id == 0:
             return jsonify({'message': 'Goal is not found'}), 404
-        elif not user.id == goal.author:
+        elif not user.id == goal.user.id:
             return jsonify({'message': 'Unable to update data of other users'}), 403
         else:
             request_data = request.get_json()
@@ -343,7 +343,7 @@ def getGoal(id):
         user.getUserByUsername(username)
         if goal.id == 0:
             return jsonify({'message': 'Goal is not found'}), 404
-        elif (goal.isprivate and not user.id == goal.author) or (goal.isfriends and not goal.author in user.friends):
+        elif (goal.isprivate and not user.id == goal.user.id) or (goal.isfriends and not goal.user.id in user.friends):
             return jsonify({'message': 'Unable to get hidden data of other users'}), 403
         else:
             return jsonify(goal.toJSON()), 200
@@ -638,8 +638,10 @@ def importPosts():
                 if ('author' in postJSON) and ('title' in postJSON):
                     print('Importing:')
                     print(postJSON)
+                    user = User()
+                    user.getUserById(postJSON['author'])
                     goal = Goal(
-                        author=int(postJSON['author']),
+                        user=user,
                         date=datetime.now(),
                         title=postJSON['title'],
                         isprivate=False,
@@ -651,8 +653,6 @@ def importPosts():
                     )
                     # goal.fromJSON(postJSON)
                     res = goal.save()
-                    user = User()
-                    user.getUserById(goal.author)
                     user.updateRating()
                     result.append(res[0])
         return jsonify({'result': result}), 200

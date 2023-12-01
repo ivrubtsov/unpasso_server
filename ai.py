@@ -77,7 +77,7 @@ def generateGoal(user: User, mode='run'):
                 print('Response contains a title:')
                 print(jsonResponse["title"])
             genGoal = Goal(
-                author=user.id,
+                user=user,
                 date = datetime.now(),
                 title=jsonResponse["title"],
                 status=7,

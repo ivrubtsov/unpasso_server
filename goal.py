@@ -71,7 +71,7 @@ class Goal:
     def __init__(
             this,
             id = 0,
-            author = 0,
+            user = User(),
             date = datetime.now(),
             title = '',
             link = '',
@@ -86,7 +86,7 @@ class Goal:
             isaccepted = False,
         ):
         this.id = id
-        this.author = author
+        this.user = user
         this.date = date
         this.title = title
         this.link = link
@@ -107,7 +107,9 @@ class Goal:
             this.id = data['id']
             this.link = SITE_URL+'/?p='+str(this.id)
         if 'author' in data:
-            this.author = data['author']
+            user = User()
+            user.getUserById(data['author'])
+            this.user = user
         if 'date' in data:
             this.date = datetime.fromisoformat(data['date'])
         if 'date_gmt' in data:
@@ -155,7 +157,7 @@ class Goal:
                 this.status = 6
         return
 
-    def toJSON(this, user):
+    def toJSON(this):
         if this.iscompleted:
             tags = [8]
         else:
@@ -173,19 +175,12 @@ class Goal:
         
         this.date = this.date.replace(tzinfo=None)
 
-        if not user:
-            user = User()
-            user.getUserById(this.author)
-        friendsIds = []
-        for friend in user.friends:
-            friendsIds.append(friend['id'])
-
         description = {
-            'authorName': user.name,
-            'authorUserName': user.username,
-            'authorAvatar': user.avatar,
-            'authorRating': user.rating,
-            'friendsUsers': friendsIds,
+            'authorName': this.user.name,
+            'authorUserName': this.user.username,
+            'authorAvatar': this.user.avatar,
+            'authorRating': this.user.rating,
+            'friendsUsers': [], # For the compatibility with the previous version
             'likeUsers': this.likeUsers,
         }
     
@@ -193,7 +188,7 @@ class Goal:
             'id': this.id,
             'title': {'rendered': this.title},
             'date': this.date.isoformat("T", "seconds"),
-            'author': this.author,
+            'author': this.user.id,
             'tags': tags,
             'content': {'rendered': description},
         }
@@ -202,7 +197,7 @@ class Goal:
         try:
             if LOG_LEVEL=='debug':
                 print('Getting likes for a goal')
-                print('Author: '+str(this.author))
+                print('Author: '+str(this.user.id))
                 print('Goal: '+str(this.id))
             check_db()
             cursor = db.cursor()
@@ -224,7 +219,7 @@ class Goal:
         try:
             if LOG_LEVEL=='debug':
                 print('Adding a like for a goal')
-                print('Author: '+str(this.author))
+                print('Author: '+str(this.user.id))
                 print('Goal: '+str(this.id))
                 print('User: '+str(id_user))
             this.getLikes()
@@ -248,7 +243,7 @@ class Goal:
         try:
             if LOG_LEVEL=='debug':
                 print('Removing a like for a goal')
-                print('Author: '+str(this.author))
+                print('Author: '+str(this.user.id))
                 print('Goal: '+str(this.id))
                 print('User: '+str(id_user))
             this.getLikes()
@@ -275,13 +270,20 @@ class Goal:
                 print('Goal: '+str(request_id))
             check_db()
             cursor = db.cursor()
-            query = "SELECT posts.id, posts.author, posts.date, posts.title, posts.link, posts.status, posts.iscompleted, posts.ispublic, posts.isfriends, posts.isprivate, posts.isgenerated, posts.isaccepted FROM posts WHERE posts.id="+str(request_id)+" AND posts.status=1 ORDER BY posts.date DESC LIMIT 1;"
+            query = "SELECT DISTINCT posts.id, posts.date, posts.title, posts.link, posts.status, posts.iscompleted, posts.ispublic, posts.isfriends, posts.isprivate, posts.isgenerated, posts.isaccepted, users.id, users.username, users.name, users.avatar, users.rating FROM posts,users WHERE posts.id="+str(request_id)+" AND posts.status=1 AND posts.author=users.id ORDER BY posts.date DESC LIMIT 1;"
             cursor.execute(query)
             res = cursor.fetchone()
             if cursor.rowcount>0:
-                (id, author, date, title, link, status, iscompleted, ispublic, isfriends, isprivate, isgenerated, isaccepted) = res
+                (id, date, title, link, status, iscompleted, ispublic, isfriends, isprivate, isgenerated, isaccepted, userid, userUsername, userName, userAvatar, userRating) = res
                 this.id = id
-                this.author = author
+                user = User(
+                    id=userid,
+                    name=userName,
+                    username=userUsername,
+                    avatar=userAvatar,
+                    rating=userRating
+                    )
+                this.user = user
                 #this.date = datetime.fromisoformat(date)
                 this.date = date
                 this.title = title
@@ -330,9 +332,9 @@ class Goal:
             if this.id == 0:
                 if LOG_LEVEL=='debug':
                     print('Creating a goal')
-                    print('Author: '+str(this.author))
+                    print('Author: '+str(this.user.id))
                 # this.date = datetime.now()
-                query = "INSERT INTO posts (author, date, title, link, status, iscompleted, ispublic, isfriends, isprivate, isgenerated, isaccepted) VALUES ("+str(this.author)+", '"+this.date.isoformat(" ", "seconds")+"', "+DB_STRING+this.title+DB_STRING+", '', "+str(this.status)+", "+iscompleted+", "+ispublic+", "+isfriends+", "+isprivate+", "+isgenerated+", "+isaccepted+") RETURNING id;"
+                query = "INSERT INTO posts (author, date, title, link, status, iscompleted, ispublic, isfriends, isprivate, isgenerated, isaccepted) VALUES ("+str(this.user.id)+", '"+this.date.isoformat(" ", "seconds")+"', "+DB_STRING+this.title+DB_STRING+", '', "+str(this.status)+", "+iscompleted+", "+ispublic+", "+isfriends+", "+isprivate+", "+isgenerated+", "+isaccepted+") RETURNING id;"
                 cursor.execute(query)
                 this.id = cursor.fetchone()[0]
                 if LOG_LEVEL=='debug':
@@ -346,7 +348,7 @@ class Goal:
             else:
                 if LOG_LEVEL=='debug':
                     print('Updating a goal')
-                    print('Author: '+str(this.author))
+                    print('Author: '+str(this.user.id))
                     print('Goal: '+str(this.id))
                 query = "UPDATE posts SET title="+DB_STRING+this.title+DB_STRING+", link='"+this.link+"', status="+str(this.status)+", iscompleted="+iscompleted+", ispublic="+ispublic+", isfriends="+isfriends+", isprivate="+isprivate+" WHERE id="+str(this.id)+";"
                 cursor.execute(query)
@@ -370,7 +372,7 @@ class Goal:
         try:
             if LOG_LEVEL=='debug':
                 print('Deleting a goal')
-                print('Author: '+str(this.author))
+                print('Author: '+str(this.user.id))
                 print('Goal: '+str(this.id))
             check_db()
             cursor = db.cursor()
@@ -412,29 +414,29 @@ def getPersonalUserGoals(user, page, per_page):
         check_db()
         cursor = db.cursor()
         offset = per_page * (page - 1)
-        query = "SELECT posts.id, posts.author, posts.date, posts.title, posts.link, posts.status, posts.iscompleted, posts.ispublic, posts.isfriends, posts.isprivate, posts.isgenerated, posts.isaccepted FROM posts WHERE posts.author="+str(user.id)+" AND posts.status=1 ORDER BY posts.date DESC LIMIT "+str(per_page)+" OFFSET "+str(offset)+";"
+        query = "SELECT DISTINCT posts.id, posts.date, posts.title, posts.link, posts.status, posts.iscompleted, posts.ispublic, posts.isfriends, posts.isprivate, posts.isgenerated, posts.isaccepted FROM posts WHERE posts.author="+str(user.id)+" AND posts.status=1 ORDER BY posts.date DESC LIMIT "+str(per_page)+" OFFSET "+str(offset)+";"
         cursor.execute(query)
         res = cursor.fetchall()
         goals = []
         if cursor.rowcount>0:
-            for (id, author, date, title, link, status, iscompleted, ispublic, isfriends, isprivate, isgenerated, isaccepted) in res:
+            for (id, date, title, link, status, iscompleted, ispublic, isfriends, isprivate, isgenerated, isaccepted) in res:
                 goal = Goal(
-                    id,
-                    author,
+                    id=id,
+                    user=user,
                     #datetime.fromisoformat(date),
-                    date,
-                    title,
-                    link,
-                    status,
-                    iscompleted,
-                    ispublic,
-                    isfriends,
-                    isprivate,
-                    isgenerated,
-                    isaccepted,
+                    date=date,
+                    title=title,
+                    link=link,
+                    status=status,
+                    iscompleted=iscompleted,
+                    ispublic=ispublic,
+                    isfriends=isfriends,
+                    isprivate=isprivate,
+                    isgenerated=isgenerated,
+                    isaccepted=isaccepted,
                 )
                 goal.getLikes()
-                goals.append(goal.toJSON(user))
+                goals.append(goal.toJSON())
         return jsonify(goals), 200
     except Exception as e:
         print("Get user's goals error: "+str(e))
@@ -466,24 +468,30 @@ def getAvailableGoals(user, page, per_page):
         offset = per_page * (page - 1)
         check_db()
         cursor = db.cursor()
-        query = "SELECT DISTINCT posts.id, posts.author, posts.date, posts.title, posts.link, posts.status, posts.iscompleted, posts.ispublic, posts.isfriends, posts.isprivate FROM posts, friends WHERE ((posts.ispublic=TRUE OR (posts.author=friends.id_user AND friends.id_friend="+str(user.id)+" AND posts.isfriends=TRUE)) AND posts.status=1 AND NOT posts.author="+str(user.id)+") ORDER BY posts.date DESC LIMIT "+str(per_page)+" OFFSET "+str(offset)+";"
+        query = "SELECT DISTINCT posts.id, posts.date, posts.title, posts.link, posts.status, posts.iscompleted, posts.ispublic, posts.isfriends, posts.isprivate, users.id, users.username, users.name, users.avatar, users.rating FROM posts, friends, users WHERE ((posts.ispublic=TRUE OR (posts.author=friends.id_user AND friends.id_friend="+str(user.id)+" AND posts.isfriends=TRUE)) AND posts.status=1 AND NOT posts.author="+str(user.id)+" AND posts.author=users.id) ORDER BY posts.date DESC LIMIT "+str(per_page)+" OFFSET "+str(offset)+";"
         cursor.execute(query)
         res = cursor.fetchall()
         goals = []
         if cursor.rowcount>0:
-            for (id, author, date, title, link, status, iscompleted, ispublic, isfriends, isprivate) in res:
+            for (id, date, title, link, status, iscompleted, ispublic, isfriends, isprivate, userid, userUsername, userName, userAvatar, userRating) in res:
                 goal = Goal(
-                    id,
-                    author,
+                    id=id,
+                    user=User(
+                        id=userid,
+                        name=userName,
+                        username=userUsername,
+                        avatar=userAvatar,
+                        rating=userRating
+                    ),
                     #datetime.fromisoformat(date),
-                    date,
-                    title,
-                    link,
-                    status,
-                    iscompleted,
-                    ispublic,
-                    isfriends,
-                    isprivate,
+                    date=date,
+                    title=title,
+                    link=link,
+                    status=status,
+                    iscompleted=iscompleted,
+                    ispublic=ispublic,
+                    isfriends=isfriends,
+                    isprivate=isprivate,
                 )
                 goal.getLikes()
                 goals.append(goal.toJSON())
@@ -505,7 +513,7 @@ def aiGetUserGoals(user_id):
         check_db()
         cursor = db.cursor()
         # query = "SELECT posts.date, posts.title, posts.iscompleted, posts.isgenerated, posts.isaccepted FROM posts WHERE posts.author="+str(user_id)+" AND (posts.status=1 OR posts.status=7) ORDER BY posts.date DESC LIMIT "+str(OPENAI_GOALS_LIMIT_PERSONAL)+";"
-        query = "SELECT posts.date, posts.title, posts.iscompleted, posts.isgenerated, posts.isaccepted FROM posts WHERE posts.author="+str(user_id)+" AND (posts.status=1) ORDER BY posts.date DESC LIMIT "+str(OPENAI_GOALS_LIMIT_PERSONAL)+";"
+        query = "SELECT DISTINCT posts.date, posts.title, posts.iscompleted, posts.isgenerated, posts.isaccepted FROM posts WHERE posts.author="+str(user_id)+" AND (posts.status=1) ORDER BY posts.date DESC LIMIT "+str(OPENAI_GOALS_LIMIT_PERSONAL)+";"
         cursor.execute(query)
         res = cursor.fetchall()
         goals = []
