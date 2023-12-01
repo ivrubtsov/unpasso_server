@@ -3,7 +3,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 import json
 import openai
-from ai_task import gen_prompt
+from ai_task import gen_prompt, gen_systemprompt
 from user import User
 from goal import Goal, aiGetUserGoals, aiGetAllGoals
 
@@ -12,13 +12,27 @@ openai.api_key  = os.getenv('OPENAI_API_KEY')
 LOG_LEVEL = os.getenv('LOG_LEVEL')
 if not LOG_LEVEL:
     LOG_LEVEL = 'debug'
+OPENAI_MODEL = os.getenv('OPENAI_MODEL')
+if not OPENAI_MODEL:
+    OPENAI_MODEL = 'gpt-3.5-turbo'
+OPENAI_TEMPERATURE = os.getenv('OPENAI_TEMPERATURE')
+if not OPENAI_TEMPERATURE:
+    OPENAI_TEMPERATURE = 0.7
+else:
+    OPENAI_TEMPERATURE = float(OPENAI_TEMPERATURE)
+if LOG_LEVEL=='debug':
+    print('Running OpenAI model '+OPENAI_MODEL)
 
-def get_completion(prompt, model="gpt-3.5-turbo"):
-    messages = [{"role": "user", "content": prompt}]
+def get_completion(userPrompt, systemPrompt, model=OPENAI_MODEL):
+    messages = [
+    {"role": "system", "content": systemPrompt},
+    {"role": "user", "content": userPrompt}
+    ]
     response = openai.ChatCompletion.create(
         model=model,
         messages=messages,
-        temperature=float(os.getenv('OPENAI_TEMPERATURE')), # this is the degree of randomness of the model's output
+        response_format={ "type": "json_object" },
+        temperature=OPENAI_TEMPERATURE, # this is the degree of randomness of the model's output
     )
     return response.choices[0].message["content"]
 
@@ -29,21 +43,21 @@ def generateGoal(user: User, mode='run'):
         goals = aiGetUserGoals(user.id)
     if LOG_LEVEL=='debug':
         print('Generating a goal for a user')
-        # print('Goals: ')
-        # print(goals)
+        print('Goals: ')
+        for goal in goals:
+            print(goal['title'])
     if goals:
         prompt = gen_prompt(goals, isnew=False)
-    elif mode=='run':
-        # goals = aiGetAllGoals()
-        goals = []
-        prompt = gen_prompt(goals, isnew=True)
     else:
+        goals = []
         prompt = gen_prompt(goals, isnew=True)
     if LOG_LEVEL=='debug':
         print('Prompt:')
         print(prompt)
-    response = get_completion(prompt)
+    systemPrompt = gen_systemprompt()
+    response = get_completion(prompt,systemPrompt)
     if mode=='test':
+            print('Response:')
             print(response)
             return response
     if LOG_LEVEL=='debug':
@@ -61,7 +75,8 @@ def generateGoal(user: User, mode='run'):
             jsonResponse = ''
         if 'title' in jsonResponse:
             if LOG_LEVEL=='debug':
-                print('Response contains a title')
+                print('Response contains a title:')
+                print(jsonResponse["title"])
             genGoal = Goal(
                 author=user.id,
                 date = datetime.now(),

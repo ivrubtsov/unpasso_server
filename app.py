@@ -432,7 +432,10 @@ def genGoal():
         user = User()
         user.getUserByUsername(username)
         title = generateGoal(user, mode='run')
-        return jsonify({'title': title}), 200
+        if title == '':
+            return jsonify({'message': 'Server internal error'}), 500
+        else:
+            return jsonify({'title': title}), 200
     except Exception as e:
         print("Generate new goal error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
