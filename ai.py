@@ -31,7 +31,6 @@ def get_completion(userPrompt, systemPrompt, model=OPENAI_MODEL):
     response = openai.ChatCompletion.create(
         model=model,
         messages=messages,
-        response_format={ "type": "json_object" },
         temperature=OPENAI_TEMPERATURE, # this is the degree of randomness of the model's output
     )
     return response.choices[0].message["content"]
