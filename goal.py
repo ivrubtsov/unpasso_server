@@ -176,9 +176,9 @@ class Goal:
         if not user:
             user = User()
             user.getUserById(this.author)
-            friendsIds = []
-            for friend in user.friends:
-                friendsIds.append(friend['id'])
+        friendsIds = []
+        for friend in user.friends:
+            friendsIds.append(friend['id'])
 
         description = {
             'authorName': user.name,
