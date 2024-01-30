@@ -5,7 +5,7 @@ import random
 from datetime import datetime
 import wp_crypt
 from dotenv import load_dotenv
-from user import User, check_auth, check_auth_service, getPublicUserById, findUsers
+from user import User, check_auth, check_auth_service, findUsers
 from goal import Goal, getPersonalUserGoals, getAvailableGoals
 from ai import generateGoal
 
@@ -30,6 +30,7 @@ if not LOG_LEVEL:
 
 app = Flask(__name__)
 
+
 def login(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -40,6 +41,7 @@ def login(f):
             return jsonify({'error_description': 'Incorrect password.'}), 403
         return f(*args, **kwargs)
     return decorated_function
+
 
 def login_service(f):
     @wraps(f)
@@ -52,10 +54,12 @@ def login_service(f):
         return f(*args, **kwargs)
     return decorated_function
 
+
 # Server responce if a user didn't request anything
 @app.route("/hello", methods=["GET"], endpoint='hello')
 def hello():
     return "Hello World!"
+
 
 # Server responce if a user didn't request anything
 @app.route("/auth", methods=["GET"], endpoint='helloAuth')
@@ -119,6 +123,7 @@ def helloAuth():
 #  static String updateGoal(int id) => '$_baseUrl/posts/$id';
 #
 
+
 # Authenticate user
 @app.route(BASE_URL+'/users/me', methods=['GET'], endpoint='authUser')
 @login
@@ -128,7 +133,7 @@ def authUser():
     else:
         print("Incorrect request")
         return jsonify({'message': 'Incorrect request'}), 400
-    if (not username or username==''):
+    if (not username or username == ''):
         print("Username is null")
         return jsonify({'message': 'Username is null'}), 400
     try:
@@ -141,6 +146,7 @@ def authUser():
     except Exception as e:
         print("User auth error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
+
 
 # Register a new user
 @app.route(BASE_URL+'/users', methods=['GET', 'POST'], endpoint='registerUser')
@@ -160,11 +166,12 @@ def registerUser():
         print("User registration error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
+
 # Delete a user
 @app.route(BASE_URL+'/users/<int:id>', methods=['DELETE'], endpoint='deleteUser')
 @login_service
 def deleteUser(id):
-    if (not id or id=='' or id==0):
+    if (not id or id == '' or id == 0):
         print("User ID is null")
         return jsonify({'message': 'User ID is null'}), 400
     try:
@@ -181,11 +188,12 @@ def deleteUser(id):
         print("User delete error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
+
 # Get a user data
 @app.route(BASE_URL+'/users/<int:id>', methods=['GET'], endpoint='getUser')
 @login
 def getUser(id):
-    if (not id or id=='' or id==0):
+    if (not id or id == '' or id == 0):
         print("User ID is null")
         return jsonify({'message': 'User ID is null'}), 400
     try:
@@ -201,12 +209,13 @@ def getUser(id):
         print("User data error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
+
 # Update user's data
 # Don't forget about achievements in the description fiels
 @app.route(BASE_URL+'/users/<int:id>', methods=['POST'], endpoint='updateUser')
 @login
 def updateUser(id):
-    if (not id or id=='' or id==0):
+    if (not id or id == '' or id == 0):
         print("User ID is null")
         return jsonify({'message': 'User ID is null'}), 400
     try:
@@ -229,6 +238,7 @@ def updateUser(id):
         print("User data error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
+
 # Create a goal
 @app.route(BASE_URL+'/posts', methods=['POST'], endpoint='createGoal')
 @login
@@ -250,6 +260,7 @@ def createGoal():
         print("Goal save error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
+
 # Get user's goals - personal and available
 @app.route(BASE_URL+'/posts', methods=['GET'], endpoint='getUserGoals')
 @login
@@ -259,7 +270,7 @@ def getUserGoals():
     else:
         print("Incorrect request")
         return jsonify({'message': 'Incorrect request'}), 400
-    if (not username or username==''):
+    if (not username or username == ''):
         print("Username is null")
         return jsonify({'message': 'Username is null'}), 400
     try:
@@ -287,6 +298,7 @@ def getUserGoals():
         print("Get user's goals error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
+
 # Complete or update the goal
 @app.route(BASE_URL+'/posts/<int:id>', methods=['POST'], endpoint='updateGoal')
 @login
@@ -296,10 +308,10 @@ def updateGoal(id):
     else:
         print("Incorrect request")
         return jsonify({'message': 'Incorrect request'}), 400
-    if (not username or username==''):
+    if (not username or username == ''):
         print("Username is null")
         return jsonify({'message': 'Username is null'}), 400
-    if (not id or id=='' or id==0):
+    if (not id or id == '' or id == 0):
         print("Goal ID is null")
         return jsonify({'message': 'Goal ID is null'}), 400
     try:
@@ -321,6 +333,7 @@ def updateGoal(id):
         print("Goal data error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
+
 # Get the goal by ID
 @app.route(BASE_URL+'/posts/<int:id>', methods=['GET'], endpoint='getGoal')
 @login
@@ -330,10 +343,10 @@ def getGoal(id):
     else:
         print("Incorrect request")
         return jsonify({'message': 'Incorrect request'}), 400
-    if (not username or username==''):
+    if (not username or username == ''):
         print("Username is null")
         return jsonify({'message': 'Username is null'}), 400
-    if (not id or id=='' or id==0):
+    if (not id or id == '' or id == 0):
         print("Goal ID is null")
         return jsonify({'message': 'Goal ID is null'}), 400
     try:
@@ -343,7 +356,7 @@ def getGoal(id):
         user.getUserByUsername(username)
         if goal.id == 0:
             return jsonify({'message': 'Goal is not found'}), 404
-        elif (goal.isprivate and not user.id == goal.user.id) or (goal.isfriends and not goal.user.id in user.friends):
+        elif (goal.isprivate and not user.id == goal.user.id) or (goal.isfriends and goal.user.id not in user.friends):
             return jsonify({'message': 'Unable to get hidden data of other users'}), 403
         else:
             return jsonify(goal.toJSON()), 200
@@ -364,6 +377,7 @@ def getGoal(id):
 #
 #  static String removeFriend(int id) => '$_baseUrl/friends/$id?action=remove';
 
+
 # Like the goal
 @app.route(BASE_URL+'/posts/like/<int:id>', methods=['POST'], endpoint='likeGoal')
 @login
@@ -371,10 +385,10 @@ def likeGoal(id):
     try:
         if request.method == 'POST':
             username = request.authorization.username
-            if (not username or username==''):
+            if (not username or username == ''):
                 print("Username is null")
                 return jsonify({'message': 'Username is null'}), 400
-            if (not id or id=='' or id==0):
+            if (not id or id == '' or id == 0):
                 print("Goal ID is null")
                 return jsonify({'message': 'Goal ID is null'}), 400
             goal = Goal()
@@ -390,6 +404,7 @@ def likeGoal(id):
         print("Goal like error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
+
 # Unlike the goal
 @app.route(BASE_URL+'/posts/unlike/<int:id>', methods=['POST'], endpoint='unLikeGoal')
 @login
@@ -397,10 +412,10 @@ def unLikeGoal(id):
     try:
         if request.method == 'POST':
             username = request.authorization.username
-            if (not username or username==''):
+            if (not username or username == ''):
                 print("Username is null")
                 return jsonify({'message': 'Username is null'}), 400
-            if (not id or id=='' or id==0):
+            if (not id or id == '' or id == 0):
                 print("Goal ID is null")
                 return jsonify({'message': 'Goal ID is null'}), 400
             goal = Goal()
@@ -416,6 +431,7 @@ def unLikeGoal(id):
         print("Goal unlike error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
+
 # Generate a new goal by AI
 @app.route(BASE_URL+'/posts/generate', methods=['GET'], endpoint='genGoal')
 @login
@@ -425,7 +441,7 @@ def genGoal():
     else:
         print("Incorrect request")
         return jsonify({'message': 'Incorrect request'}), 400
-    if (not username or username==''):
+    if (not username or username == ''):
         print("Username is null")
         return jsonify({'message': 'Username is null'}), 400
     try:
@@ -440,6 +456,7 @@ def genGoal():
         print("Generate new goal error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
+
 # Generate a new test goal by AI for a user
 @app.route(BASE_URL+'/posts/generate/test/<int:id>', methods=['GET'], endpoint='genTestGoal')
 @login_service
@@ -448,6 +465,7 @@ def genTestGoal(id):
     user.getUserById(id)
     response = generateGoal(user, mode='test')
     return jsonify(response), 200
+
 
 # Get user's friends
 @app.route(BASE_URL+'/friends', methods=['GET'], endpoint='getFriends')
@@ -458,7 +476,7 @@ def getFriends():
     else:
         print("Incorrect request")
         return jsonify({'message': 'Incorrect request'}), 400
-    if (not username or username==''):
+    if (not username or username == ''):
         print("Username is null")
         return jsonify({'message': 'Username is null'}), 400
     try:
@@ -469,6 +487,7 @@ def getFriends():
         print("Get user's friends error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
+
 # Get user's friends received requests
 @app.route(BASE_URL+'/friends/requests/received', methods=['GET'], endpoint='getFriendsRequestsReceived')
 @login
@@ -478,7 +497,7 @@ def getFriendsRequestsReceived():
     else:
         print("Incorrect request")
         return jsonify({'message': 'Incorrect request'}), 400
-    if (not username or username==''):
+    if (not username or username == ''):
         print("Username is null")
         return jsonify({'message': 'Username is null'}), 400
     try:
@@ -489,6 +508,7 @@ def getFriendsRequestsReceived():
         print("Get user's friends received error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
+
 # Get user's friends sent requests
 @app.route(BASE_URL+'/friends/requests/sent', methods=['GET'], endpoint='getFriendsRequestsSent')
 @login
@@ -498,7 +518,7 @@ def getFriendsRequestsSent():
     else:
         print("Incorrect request")
         return jsonify({'message': 'Incorrect request'}), 400
-    if (not username or username==''):
+    if (not username or username == ''):
         print("Username is null")
         return jsonify({'message': 'Username is null'}), 400
     try:
@@ -509,11 +529,12 @@ def getFriendsRequestsSent():
         print("Get user's friends sent error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
+
 # Get user's friends and requests data
 @app.route(BASE_URL+'/friends/<int:id>', methods=['GET'], endpoint='getFriendsData')
 @login
 def getFriendsData(id):
-    if (not id or id=='' or id==0):
+    if (not id or id == '' or id == 0):
         print("User ID is null")
         return jsonify({'message': 'User ID is null'}), 400
     try:
@@ -529,6 +550,7 @@ def getFriendsData(id):
         print("User data error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
+
 # Search for friends
 @app.route(BASE_URL+'/friends/search', methods=['GET'], endpoint='searchFriends')
 @login
@@ -538,7 +560,7 @@ def searchFriends():
     else:
         print("Incorrect request")
         return jsonify({'message': 'Incorrect request'}), 400
-    if (not username or username==''):
+    if (not username or username == ''):
         print("Username is null")
         return jsonify({'message': 'Username is null'}), 400
     if 'text' in request.args:
@@ -552,6 +574,7 @@ def searchFriends():
         print("Search users error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
+
 # Process friends requests
 @app.route(BASE_URL+'/friends/requests/<int:id>', methods=['POST'], endpoint='friendsRequest')
 @login
@@ -559,10 +582,10 @@ def friendsRequest(id):
     try:
         if request.method == 'POST':
             username = request.authorization.username
-            if (not username or username==''):
+            if (not username or username == ''):
                 print("Username is null")
                 return jsonify({'message': 'Username is null'}), 400
-            if (not id or id=='' or id==0):
+            if (not id or id == '' or id == 0):
                 print("Friend ID is null")
                 return jsonify({'message': 'Friend ID is null'}), 400
             user = User()
@@ -591,6 +614,7 @@ def friendsRequest(id):
         print("Goal save error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
 
+
 # Import users
 @app.route(BASE_URL+'/users/import', methods=['POST'], endpoint='importUsers')
 @login_service
@@ -614,7 +638,7 @@ def importUsers():
                         avatar=random.randint(1, AVATAR_MAX),
                         status=2,
                     )
-                    if (not 'password' in userJSON) or (userJSON['password'] == ''):
+                    if ('password' not in userJSON) or (userJSON['password'] == ''):
                         user.password = wp_crypt.crypt_private(SERVICE_IMPORT_PASSWORD)
                     res = user.save()
                     result.append(res[0])
@@ -622,6 +646,7 @@ def importUsers():
     except Exception as e:
         print("Users import error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
+
 
 # Import goals
 @app.route(BASE_URL+'/posts/import', methods=['POST'], endpoint='importPosts')
@@ -659,6 +684,7 @@ def importPosts():
     except Exception as e:
         print("Goals import error: "+str(e))
         return jsonify({'message': 'Server internal error'}), 500
+
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=8000)

@@ -1,6 +1,7 @@
 from flask import jsonify
 import psycopg2
 import os
+import atexit
 from datetime import datetime
 from dotenv import load_dotenv
 from user import User
@@ -34,19 +35,23 @@ LOG_LEVEL = os.getenv('LOG_LEVEL')
 if not LOG_LEVEL:
     LOG_LEVEL = 'debug'
 
+
 def open_database_connection():
     try:
         connection = psycopg2.connect(database=DB_DATABASE,
-                                host=DB_SERVER,
-                                user=DB_USER,
-                                password=DB_PASSWORD,
-                                port=DB_PORT)
+                                      host=DB_SERVER,
+                                      user=DB_USER,
+                                      password=DB_PASSWORD,
+                                      port=DB_PORT)
         print('Database connection established')
         return connection
     except Exception as e:
         print("Database connection error: "+str(e))
         quit()
+
+
 db = open_database_connection()
+
 
 def check_db():
     global db
@@ -59,32 +64,35 @@ def check_db():
     except psycopg2.OperationalError:
         db = open_database_connection()
 
-import atexit
-#defining function to run on shutdown
+
+# defining function to run on shutdown
 def close_database_connection():
     db.close()
     print("Database connection closed")
-#Register the function to be called on exit
+
+
+# Register the function to be called on exit
 atexit.register(close_database_connection)
+
 
 class Goal:
     def __init__(
             this,
-            id = 0,
-            user = User(),
-            date = datetime.now(),
-            title = '',
-            link = '',
-            status = 1, 
-            iscompleted = False,
-            ispublic = True,
-            isfriends = False,
-            isprivate = False,
-            likes = 0,
-            likeUsers = [],
-            isgenerated = False,
-            isaccepted = False,
-        ):
+            id=0,
+            user=User(),
+            date=datetime.now(),
+            title='',
+            link='',
+            status=1,
+            iscompleted=False,
+            ispublic=True,
+            isfriends=False,
+            isprivate=False,
+            likes=0,
+            likeUsers=[],
+            isgenerated=False,
+            isaccepted=False,
+    ):
         this.id = id
         this.user = user
         this.date = date
@@ -99,6 +107,7 @@ class Goal:
         this.likeUsers = likeUsers
         this.isgenerated = isgenerated
         this.isaccepted = isaccepted
+
     def fromJSON(this, data):
         if not data:
             return
@@ -172,7 +181,7 @@ class Goal:
             tags.append(29)
         if this.isaccepted:
             tags.append(30)
-        
+
         this.date = this.date.replace(tzinfo=None)
 
         description = {
@@ -180,10 +189,10 @@ class Goal:
             'authorUserName': this.user.username,
             'authorAvatar': this.user.avatar,
             'authorRating': this.user.rating,
-            'friendsUsers': [], # For the compatibility with the previous version
+            'friendsUsers': [],  # For the compatibility with the previous version
             'likeUsers': this.likeUsers,
         }
-    
+
         return {
             'id': this.id,
             'title': {'rendered': this.title},
@@ -195,7 +204,7 @@ class Goal:
 
     def getLikes(this):
         try:
-            if LOG_LEVEL=='debug':
+            if LOG_LEVEL == 'debug':
                 print('Getting likes for a goal')
                 print('Author: '+str(this.user.id))
                 print('Goal: '+str(this.id))
@@ -205,7 +214,7 @@ class Goal:
             cursor.execute(query)
             res = cursor.fetchall()
             likes = []
-            if cursor.rowcount>0:
+            if cursor.rowcount > 0:
                 for (id_user) in res:
                     likes.append(id_user[0])
             this.likeUsers = likes
@@ -217,13 +226,13 @@ class Goal:
 
     def addLike(this, id_user):
         try:
-            if LOG_LEVEL=='debug':
+            if LOG_LEVEL == 'debug':
                 print('Adding a like for a goal')
                 print('Author: '+str(this.user.id))
                 print('Goal: '+str(this.id))
                 print('User: '+str(id_user))
             this.getLikes()
-            if not id_user in this.likeUsers:
+            if id_user not in this.likeUsers:
                 check_db()
                 cursor = db.cursor()
                 query = "INSERT INTO likes (id_post, id_user) VALUES ("+str(this.id)+", "+str(id_user)+");"
@@ -241,7 +250,7 @@ class Goal:
 
     def removeLike(this, id_user):
         try:
-            if LOG_LEVEL=='debug':
+            if LOG_LEVEL == 'debug':
                 print('Removing a like for a goal')
                 print('Author: '+str(this.user.id))
                 print('Goal: '+str(this.id))
@@ -265,7 +274,7 @@ class Goal:
 
     def getGoalById(this, request_id):
         try:
-            if LOG_LEVEL=='debug':
+            if LOG_LEVEL == 'debug':
                 print('Looking for a goal by id')
                 print('Goal: '+str(request_id))
             check_db()
@@ -273,7 +282,7 @@ class Goal:
             query = "SELECT DISTINCT posts.id, posts.date, posts.title, posts.link, posts.status, posts.iscompleted, posts.ispublic, posts.isfriends, posts.isprivate, posts.isgenerated, posts.isaccepted, users.id, users.username, users.name, users.avatar, users.rating FROM posts,users WHERE posts.id="+str(request_id)+" AND posts.status=1 AND posts.author=users.id ORDER BY posts.date DESC LIMIT 1;"
             cursor.execute(query)
             res = cursor.fetchone()
-            if cursor.rowcount>0:
+            if cursor.rowcount > 0:
                 (id, date, title, link, status, iscompleted, ispublic, isfriends, isprivate, isgenerated, isaccepted, userid, userUsername, userName, userAvatar, userRating) = res
                 this.id = id
                 this.user = User(
@@ -283,7 +292,7 @@ class Goal:
                     avatar=userAvatar,
                     rating=userRating
                     )
-                #this.date = datetime.fromisoformat(date)
+                # this.date = datetime.fromisoformat(date)
                 this.date = date
                 this.title = title
                 this.link = link
@@ -298,8 +307,8 @@ class Goal:
             return
         except Exception as e:
             print("Get post data by ID error: "+str(e))
-            return        
-    
+            return
+
     def save(this):
         try:
             if this.iscompleted:
@@ -329,14 +338,14 @@ class Goal:
             check_db()
             cursor = db.cursor()
             if this.id == 0:
-                if LOG_LEVEL=='debug':
+                if LOG_LEVEL == 'debug':
                     print('Creating a goal')
                     print('Author: '+str(this.user.id))
                 # this.date = datetime.now()
                 query = "INSERT INTO posts (author, date, title, link, status, iscompleted, ispublic, isfriends, isprivate, isgenerated, isaccepted) VALUES ("+str(this.user.id)+", '"+this.date.isoformat(" ", "seconds")+"', "+DB_STRING+this.title+DB_STRING+", '', "+str(this.status)+", "+iscompleted+", "+ispublic+", "+isfriends+", "+isprivate+", "+isgenerated+", "+isaccepted+") RETURNING id;"
                 cursor.execute(query)
                 this.id = cursor.fetchone()[0]
-                if LOG_LEVEL=='debug':
+                if LOG_LEVEL == 'debug':
                     print('Goal: '+str(this.id))
                 this.link = SITE_URL+'/?p='+str(this.id)
                 query = "UPDATE posts SET link='"+this.link+"' WHERE id="+str(this.id)+";"
@@ -345,14 +354,14 @@ class Goal:
                     query = "UPDATE posts SET status=9 WHERE title="+DB_STRING+this.title+DB_STRING+" AND status=7;"
                     cursor.execute(query)
             else:
-                if LOG_LEVEL=='debug':
+                if LOG_LEVEL == 'debug':
                     print('Updating a goal')
                     print('Author: '+str(this.user.id))
                     print('Goal: '+str(this.id))
                 query = "UPDATE posts SET title="+DB_STRING+this.title+DB_STRING+", link='"+this.link+"', status="+str(this.status)+", iscompleted="+iscompleted+", ispublic="+ispublic+", isfriends="+isfriends+", isprivate="+isprivate+" WHERE id="+str(this.id)+";"
                 cursor.execute(query)
             db.commit()
-            if LOG_LEVEL=='debug':
+            if LOG_LEVEL == 'debug':
                 print('Goal is saved')
             return jsonify(this.toJSON()), 200
         except Exception as e:
@@ -369,7 +378,7 @@ class Goal:
 
     def delete(this):
         try:
-            if LOG_LEVEL=='debug':
+            if LOG_LEVEL == 'debug':
                 print('Deleting a goal')
                 print('Author: '+str(this.user.id))
                 print('Goal: '+str(this.id))
@@ -392,9 +401,10 @@ class Goal:
             }
             return jsonify(res), 500
 
+
 def getPersonalUserGoals(user, page, per_page):
     try:
-        if LOG_LEVEL=='debug':
+        if LOG_LEVEL == 'debug':
             print('Getting personal goals for a user')
             print('User: '+str(user.id))
             print('Page/per page: '+str(page)+'/'+str(per_page))
@@ -417,12 +427,12 @@ def getPersonalUserGoals(user, page, per_page):
         cursor.execute(query)
         res = cursor.fetchall()
         goals = []
-        if cursor.rowcount>0:
+        if cursor.rowcount > 0:
             for (id, date, title, link, status, iscompleted, ispublic, isfriends, isprivate, isgenerated, isaccepted) in res:
                 goal = Goal(
                     id=id,
                     user=user,
-                    #datetime.fromisoformat(date),
+                    # datetime.fromisoformat(date),
                     date=date,
                     title=title,
                     link=link,
@@ -446,9 +456,10 @@ def getPersonalUserGoals(user, page, per_page):
         }
         return jsonify(res), 500
 
+
 def getAvailableGoals(user, page, per_page):
     try:
-        if LOG_LEVEL=='debug':
+        if LOG_LEVEL == 'debug':
             print('Getting available goals for a user')
             print('User: '+str(user.id))
             print('Page/per page: '+str(page)+'/'+str(per_page))
@@ -471,7 +482,7 @@ def getAvailableGoals(user, page, per_page):
         cursor.execute(query)
         res = cursor.fetchall()
         goals = []
-        if cursor.rowcount>0:
+        if cursor.rowcount > 0:
             for (id, date, title, link, status, iscompleted, ispublic, isfriends, isprivate, userid, userUsername, userName, userAvatar, userRating) in res:
                 goal = Goal(
                     id=id,
@@ -482,7 +493,7 @@ def getAvailableGoals(user, page, per_page):
                         avatar=userAvatar,
                         rating=userRating
                     ),
-                    #datetime.fromisoformat(date),
+                    # datetime.fromisoformat(date),
                     date=date,
                     title=title,
                     link=link,
@@ -504,9 +515,10 @@ def getAvailableGoals(user, page, per_page):
         }
         return jsonify(res), 500
 
+
 def aiGetUserGoals(user_id):
     try:
-        if LOG_LEVEL=='debug':
+        if LOG_LEVEL == 'debug':
             print('Getting goals for a user to use in the AI generator')
             print('User: '+str(user_id))
         check_db()
@@ -516,7 +528,7 @@ def aiGetUserGoals(user_id):
         cursor.execute(query)
         res = cursor.fetchall()
         goals = []
-        if cursor.rowcount>0:
+        if cursor.rowcount > 0:
             for (date, title, iscompleted, isgenerated, isaccepted) in res:
                 goal = {
                     'date': date,
@@ -526,16 +538,17 @@ def aiGetUserGoals(user_id):
                     'isaccepted': isaccepted,
                 }
                 goals.append(goal)
-        if LOG_LEVEL=='debug':
+        if LOG_LEVEL == 'debug':
             print(goals)
         return goals
     except Exception as e:
         print("Get user's goals for AI error: "+str(e))
         return []
 
+
 def aiGetAllGoals():
     try:
-        if LOG_LEVEL=='debug':
+        if LOG_LEVEL == 'debug':
             print('Getting all available goals for AI generator')
         check_db()
         cursor = db.cursor()
@@ -543,7 +556,7 @@ def aiGetAllGoals():
         cursor.execute(query)
         res = cursor.fetchall()
         goals = []
-        if cursor.rowcount>0:
+        if cursor.rowcount > 0:
             for (date, title, iscompleted, isgenerated, isaccepted) in res:
                 goal = {
                     'date': date,
@@ -553,7 +566,7 @@ def aiGetAllGoals():
                     'isaccepted': isaccepted,
                 }
                 goals.append(goal)
-        if LOG_LEVEL=='debug':
+        if LOG_LEVEL == 'debug':
             print(goals)
         return goals
     except Exception as e:
